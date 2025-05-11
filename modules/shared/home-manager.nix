@@ -1,8 +1,8 @@
 { config, pkgs, lib, ... }:
 
-let name = "%NAME%";
-    user = "%USER%";
-    email = "%EMAIL%"; in
+let name = "Tapani Moilanen";
+    user = "tapani";
+    email = "moilanen.tapani@gmail.com"; in
 {
   # Shared shell configuration
   zsh = {
