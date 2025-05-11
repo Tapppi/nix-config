@@ -35,13 +35,13 @@ let name = "Tapani Moilanen";
       # Remove history data we don't want to see
       export HISTIGNORE="pwd:ls:cd"
 
-      # Emacs is my editor
+      # Neovim is my editor
       export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -t"
-      export VISUAL="emacsclient -c -a emacs"
+      export EDITOR="nvim"
+      export VISUAL="nvim"
 
       e() {
-          emacsclient -t "$@"
+          nvim "$@"
       }
 
       # nix shortcuts
@@ -68,7 +68,7 @@ let name = "Tapani Moilanen";
     extraConfig = {
       init.defaultBranch = "main";
       core = {
-	    editor = "vim";
+        editor = "nvim";
         autocrlf = "input";
       };
       pull.rebase = true;
@@ -76,8 +76,12 @@ let name = "Tapani Moilanen";
     };
   };
 
-  vim = {
+  neovim = {
     enable = true;
+    viAlias = true;
+    vimAlias = true;
+    vimdiffAlias = true;
+    defaultEditor = true;
     plugins = with pkgs.vimPlugins; [ vim-airline vim-airline-themes vim-startify vim-tmux-navigator ];
     settings = { ignorecase = true; };
     extraConfig = ''
