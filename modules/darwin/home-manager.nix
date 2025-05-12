@@ -56,7 +56,12 @@ in
           additionalFiles
           # { "emacs-launcher.command".source = myEmacsLauncher; }
         ];
-        stateVersion = "23.11";
+
+        # Don't change this, it tracks the initial version installed for internal
+        # backwards-compatibility. See https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
+        # Before changing this value read the documentation for this option
+        # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html)
+        stateVersion = "25.05";
       };
       programs = {} // import ../shared/home-manager.nix { inherit config pkgs lib; };
 
