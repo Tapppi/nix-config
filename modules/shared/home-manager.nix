@@ -2,8 +2,14 @@
 
 let name = "Tapani Moilanen";
     user = "tapani";
-    email = "moilanen.tapani@gmail.com"; in
+    email = "moilanen.tapani@gmail.com";
+    nixCats = import './modules/nvim' { inherit inputs; };
+in
 {
+  imports = [
+    nixCats.homeModule
+  ];
+
   # Shared shell configuration
   zsh = {
     enable = true;
