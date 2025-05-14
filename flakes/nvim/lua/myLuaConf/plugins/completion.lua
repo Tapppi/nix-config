@@ -86,7 +86,6 @@ return {
           menu = {
             scrolloff = 2,
             winblend = 15,
-            border = "padded",
             draw = {
               -- We don't need label_description now because label and label_description are already
               -- combined together in label by colorful-menu.nvim.
@@ -94,7 +93,6 @@ return {
               columns = { { "kind" }, { "label" , gap = 1 }, { "source_name" }, },
               components = {
                 label = {
-                  width = { fill = true, max = 70 },
                   text = function(ctx)
                     return require("colorful-menu").blink_components_text(ctx)
                   end,
@@ -110,8 +108,7 @@ return {
             auto_show_delay_ms = 500,
             window = {
               max_height = 20,
-              border = "single",
-              winblend = 20,
+              winblend = 25,
             }
           },
         },
