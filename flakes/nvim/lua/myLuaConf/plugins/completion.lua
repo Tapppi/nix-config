@@ -19,7 +19,7 @@ return {
     "luasnip",
     for_cat = "general.blink",
     dep_of = { "blink.cmp" },
-    after = function (_)
+    after = function(_)
       local luasnip = require 'luasnip'
       require('luasnip.loaders.from_vscode').lazy_load()
       luasnip.config.setup {}
@@ -27,9 +27,9 @@ return {
       local ls = require('luasnip')
 
       vim.keymap.set({ "i", "s" }, "<M-n>", function()
-          if ls.choice_active() then
-              ls.change_choice(1)
-          end
+        if ls.choice_active() then
+          ls.change_choice(1)
+        end
       end)
     end,
   },
@@ -42,11 +42,11 @@ return {
     "blink.cmp",
     for_cat = "general.blink",
     event = "DeferredUIEnter",
-    after = function (_)
+    after = function(_)
       require("blink.cmp").setup({
         -- 'default' (recommended) for mappings similar to built-in completions (C-y to accept)
         -- See :h blink-cmp-config-keymap for configuring keymaps
-        keymap =  {
+        keymap = {
           preset = 'default',
         },
         cmdline = {
@@ -67,6 +67,8 @@ return {
           end,
         },
         fuzzy = {
+          -- See the docs for control of how prebuilt binaries are installed
+          implementation = 'prefer_rust_with_warning',
           sorts = {
             'exact',
             -- defaults
@@ -82,10 +84,17 @@ return {
         },
         completion = {
           menu = {
+            scrolloff = 2,
+            winblend = 15,
+            border = "padded",
             draw = {
-              treesitter = { 'lsp' },
+              -- We don't need label_description now because label and label_description are already
+              -- combined together in label by colorful-menu.nvim.
+              -- TODO: fix { "kind_icon" }, test label_description with lang where it matters
+              columns = { { "kind" }, { "label" , gap = 1 }, { "source_name" }, },
               components = {
                 label = {
+                  width = { fill = true, max = 70 },
                   text = function(ctx)
                     return require("colorful-menu").blink_components_text(ctx)
                   end,
@@ -98,6 +107,12 @@ return {
           },
           documentation = {
             auto_show = true,
+            auto_show_delay_ms = 500,
+            window = {
+              max_height = 20,
+              border = "single",
+              winblend = 20,
+            }
           },
         },
         snippets = {
@@ -105,6 +120,9 @@ return {
         },
         sources = {
           default = { 'lsp', 'path', 'snippets', 'buffer', 'omni' },
+          per_filetype = {
+            lua = { 'lsp', 'path', 'snippets', 'buffer', 'omni', 'lazydev' },
+          },
           providers = {
             path = {
               score_offset = 50,
@@ -122,6 +140,12 @@ return {
               opts = {
                 cmp_name = 'cmdline',
               },
+            },
+            lazydev = {
+              name = 'LazyDev',
+              module = 'lazydev.integrations.blink',
+              score_offset = 100,
+              enabled = nixCats('neonixdev'),
             },
           },
         },

@@ -20,7 +20,6 @@ if ok then
   end, { desc = "dismiss notify popup and clear hlsearch" })
 end
 
--- NOTE: you can check if you included the category with the thing wherever you want.
 if nixCats('general.extra') then
   -- I didnt want to bother with lazy loading this.
   -- I could put it in opt and put it in a spec anyway
