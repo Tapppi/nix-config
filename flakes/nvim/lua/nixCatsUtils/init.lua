@@ -55,6 +55,7 @@ function M.setup(v)
         end
       })
     end
+    ---@diagnostic disable-next-line: duplicate-set-field
     package.preload['nixCats'] = function ()
       local ncsub = {
         get = function(_) return nixCats_default_value end,

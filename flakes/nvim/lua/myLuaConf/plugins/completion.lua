@@ -56,6 +56,7 @@ return {
               auto_show = true,
             },
           },
+          ---@diagnostic disable-next-line: assign-type-mismatch
           sources = function()
             local type = vim.fn.getcmdtype()
             -- Search forward and backward

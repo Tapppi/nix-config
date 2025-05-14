@@ -285,9 +285,10 @@
         };
         # enable the categories you want from categoryDefinitions
         categories = {
-          markdown = true;
           general = true;
           lint = true;
+          shell = true;
+          markdown = true;
           lua = true;
           neonixdev = true;
 
@@ -321,20 +322,20 @@
           # or tell it some other place to load
           # unwrappedCfgPath = "/some/path/to/your/config";
 
-          # configDirName: will now look for nvim within .config and .local and others
+          # configDirName: will now look for this name within .config and .local and others
           # this can be changed so that you can choose which ones share data folders for auths
           # :h $NVIM_APPNAME
-          configDirName = "nvim";
+          configDirName = "testNvim";
 
-          aliases = [ "testCat" ];
+          aliases = [ "testCat" "tvi" ];
         };
         categories = {
-          markdown = true;
           general = true;
-          neonixdev = true;
           lint = true;
           shell = true;
+          markdown = true;
           lua = true;
+          neonixdev = true;
           # go = true; # <- disabled but you could enable it with override or module on install
           lspDebugMode = false;
           themer = true;
