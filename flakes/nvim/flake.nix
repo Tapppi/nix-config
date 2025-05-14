@@ -8,6 +8,12 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     nixCats.url = "github:BirdeeHub/nixCats-nvim";
+
+    # This is how we add overlays for plugins only available on github
+    "plugins-wezterm-types" = {
+      url = "github:gonstoll/wezterm-types";
+      flake = false;
+    };
   };
 
   # see :help nixCats.flake.outputs
@@ -51,7 +57,6 @@
       lspsAndRuntimeDeps = {
         # TODO: web vscode json etc. lang servers, typescript tools, eslint
         # TODO: conform, i.e. prettier, shfmt, stylua etc.
-        # TODO: wezterm-types overlay/package install for luals 
         general = with pkgs; [
           universal-ctags
           ripgrep
@@ -82,14 +87,14 @@
           go-tools
           gccgo
         ];
-        shell = [
+        shell = with pkgs; [
           bash-language-server
         ];
-        lua = [
+        lua = with pkgs; [
           lua-language-server
           stylua
         ];
-        neonixdev = [
+        neonixdev = with pkgs; [
           nix-doc
           nixd
         ];
@@ -154,6 +159,7 @@
         ];
         neonixdev = with pkgs.vimPlugins; [
           lazydev-nvim
+          pkgs.neovimPlugins.wezterm-types
         ];
         general = {
           blink = with pkgs.vimPlugins; [
