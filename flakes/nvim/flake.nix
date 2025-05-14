@@ -159,6 +159,7 @@
         ];
         neonixdev = with pkgs.vimPlugins; [
           lazydev-nvim
+          # This is how you enable plugins added as flake inputs
           pkgs.neovimPlugins.wezterm-types
         ];
         general = {
@@ -202,9 +203,6 @@
             undotree
             indent-blankline-nvim
             vim-startuptime
-            # If it was included in your flake inputs as plugins-hlargs,
-            # this would be how to add that plugin in your config.
-            # pkgs.neovimPlugins.hlargs
           ];
         };
       };
@@ -258,6 +256,25 @@
       };
     };
 
+    # We define default categories here, so we can use them for both default and test packages
+    defaultCategories = {
+      general = true;
+      lint = true;
+      shell = true;
+      markdown = true;
+      lua = true;
+      neonixdev = true;
+
+      # enabling this category will enable the go category,
+      # and ALSO debug.go and debug.default due to our extraCats in categoryDefinitions.
+      # go = true; # <- disabled but you could enable it with override or module on install
+
+      # Categories don't *have* to have plugins to be used:
+      lspDebugMode = false;
+      themer = true;
+      colorscheme = "catppuccin-mocha";
+    };
+
     # see :help nixCats.flake.outputs.packageDefinitions
     # Now build a package with specific categories from above marked as true to include them.
     # This entire set is also passed to nixCats for querying within the lua.
@@ -275,32 +292,18 @@
           # That would result in a failed build, as nixos and home manager modules validate for collisions on your path
           aliases = [ "vim" "vi" ];
 
-          # explained below in the `regularCats` package's definition
-          # OR see :help nixCats.flake.outputs.settings for all of the settings available
+          # :help nixCats.flake.outputs.settings for all of the settings available
           wrapRc = true;
+          # will look for this name within .config and .local and others, controls which pkgs share
+          # this can be changed so that you can choose which ones share data folders for auths
+          # :h $NVIM_APPNAME
           configDirName = "nvim";
           # neovim-unwrapped = inputs.neovim-nightly-overlay.packages.${pkgs.system}.neovim;
           hosts.python3.enable = true;
           hosts.node.enable = true;
         };
         # enable the categories you want from categoryDefinitions
-        categories = {
-          general = true;
-          lint = true;
-          shell = true;
-          markdown = true;
-          lua = true;
-          neonixdev = true;
-
-          # enabling this category will enable the go category,
-          # and ALSO debug.go and debug.default due to our extraCats in categoryDefinitions.
-          # go = true; # <- disabled but you could enable it with override or module on install
-
-          # Categories don't *have* to have plugins to be used:
-          lspDebugMode = false;
-          themer = true;
-          colorscheme = "catppuccin-mocha";
-        };
+        categories = defaultCategories // {};
         extra = {
           # to keep the categories table from being filled with non category things that you want to pass
           # there is also an extra table you can use to pass extra stuff.
@@ -315,32 +318,17 @@
         settings = {
           suffix-path = true;
           suffix-LD = true;
-          # IMPURE PACKAGE: normal config reload
-          # include same categories as main config,
-          # will load from vim.fn.stdpath('config')
+          # IMPURE PACKAGE: normal config reload from stdpath('config') := ~/.config/testNvim
+          # Includes same categories as default package in order to test configs for the main package
           wrapRc = false;
           # or tell it some other place to load
-          # unwrappedCfgPath = "/some/path/to/your/config";
+          # unwrappedCfgPath = "/Users/tapani/project/github/tapppi/nix-config/flakes/nvim";
 
-          # configDirName: will now look for this name within .config and .local and others
-          # this can be changed so that you can choose which ones share data folders for auths
-          # :h $NVIM_APPNAME
           configDirName = "testNvim";
 
           aliases = [ "testCat" "tvi" ];
         };
-        categories = {
-          general = true;
-          lint = true;
-          shell = true;
-          markdown = true;
-          lua = true;
-          neonixdev = true;
-          # go = true; # <- disabled but you could enable it with override or module on install
-          lspDebugMode = false;
-          themer = true;
-          colorscheme = "catppuccin-mocha";
-        };
+        categories = defaultCategories // {};
         extra = {
           # nixCats.extra("path.to.val") will perform vim.tbl_get(nixCats.extra, "path" "to" "val")
           # this is different from the main nixCats("path.to.cat") in that
