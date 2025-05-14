@@ -1,0 +1,10 @@
+{
+  "Lua.diagnostics.globals": [
+    "vim",
+    "nixCats"
+  ],
+  "Lua.diagnostics.disable": [
+    "missing-fields"
+  ],
+  "Lua.runtime.version": "LuaJIT"
+}
