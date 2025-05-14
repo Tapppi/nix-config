@@ -9,9 +9,11 @@ require('lze').load {
     -- colorscheme = "",
     after = function (plugin)
       require('lint').linters_by_ft = {
-        -- NOTE: download some linters in lspsAndRuntimeDeps
-        -- and configure them here
-        -- markdown = {'vale',},
+        gitcommit = { 'gitlint' },
+        bash = { 'shellcheck' },
+        zsh = { 'zsh', 'shellcheck' },
+        markdown = { 'vale' , 'markdownlint-cli2' },
+        go = { 'golangci-lint' },
         -- javascript = { 'eslint' },
         -- typescript = { 'eslint' },
       }

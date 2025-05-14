@@ -94,6 +94,13 @@ require('lze').load {
     -- also these are regular specs and you can use before and after and all the other normal fields
   },
   {
+    "bash-language-server",
+    enabled = nixCats('bash') or false,
+    lsp = {
+      filetypes = { "bash", "sh", "zsh" },
+    },
+  },
+  {
     "gopls",
     for_cat = "go",
     -- if you don't provide the filetypes it asks lspconfig for them
@@ -119,7 +126,7 @@ require('lze').load {
   },
   {
     "nixd",
-    enabled = catUtils.isNixCats and (nixCats('nix') or nixCats('neonixdev')) or false,
+    enabled = catUtils.isNixCats and nixCats('neonixdev') or false,
     lsp = {
       filetypes = { "nix" },
       settings = {
