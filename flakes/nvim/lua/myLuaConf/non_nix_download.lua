@@ -58,6 +58,7 @@ require('nixCatsUtils.catPacker').setup({
   -- lint and format
   { 'mfussenegger/nvim-lint', opt = true, },
   { 'stevearc/conform.nvim', opt = true, },
+  -- { 'gonstoll/wezterm-types', opt = true, }
 
   -- dap
   { 'nvim-neotest/nvim-nio', opt = true, },

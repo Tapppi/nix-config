@@ -49,6 +49,9 @@
       # Dependencies that should be available at RUN TIME for plugins.
       # Will be available to PATH within neovim terminal
       lspsAndRuntimeDeps = {
+        # TODO: web vscode json etc. lang servers, typescript tools, eslint
+        # TODO: conform, i.e. prettier, shfmt, stylua etc.
+        # TODO: wezterm-types overlay/package install for luals 
         general = with pkgs; [
           universal-ctags
           ripgrep
@@ -94,6 +97,7 @@
 
       # Plugins that will load at startup without using packadd:
       startupPlugins = {
+        # TODO snacks and mini
         debug = with pkgs.vimPlugins; [
           nvim-nio
         ];
@@ -153,7 +157,7 @@
         ];
         general = {
           blink = with pkgs.vimPlugins; [
-            luasnip
+            luasnip # TODO: ???
             cmp-cmdline
             blink-cmp
             blink-compat

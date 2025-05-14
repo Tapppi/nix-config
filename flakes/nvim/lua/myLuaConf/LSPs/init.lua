@@ -61,6 +61,7 @@ require('lze').load {
       require('lazydev').setup({
         library = {
           { words = { "nixCats" }, path = (nixCats.nixCatsPath or "") .. '/lua' },
+          -- { words = { "wezterm" }, path = 'wezterm-types', mods = {'wezterm'}},
         },
       })
     end,
@@ -74,8 +75,6 @@ require('lze').load {
     -- in our case, it just expects the normal lspconfig setup options,
     -- but with a default on_attach and capabilities
     lsp = {
-      -- if you provide the filetypes it doesn't ask lspconfig for the filetypes
-      filetypes = { 'lua' },
       settings = {
         Lua = {
           runtime = { version = 'LuaJIT' },
@@ -97,6 +96,7 @@ require('lze').load {
     "bash-language-server",
     enabled = nixCats('bash') or false,
     lsp = {
+      -- if you provide the filetypes it doesn't ask lspconfig for the filetypes
       filetypes = { "bash", "sh", "zsh" },
     },
   },
@@ -104,31 +104,24 @@ require('lze').load {
     "gopls",
     for_cat = "go",
     -- if you don't provide the filetypes it asks lspconfig for them
-    lsp = {
-      filetypes = { "go", "gomod", "gowork", "gotmpl" },
-    },
+    lsp = {},
   },
   {
     "rnix",
     -- mason doesn't have nixd
     enabled = not catUtils.isNixCats,
-    lsp = {
-      filetypes = { "nix" },
-    },
+    lsp = {},
   },
   {
     "nil_ls",
     -- mason doesn't have nixd
     enabled = not catUtils.isNixCats,
-    lsp = {
-      filetypes = { "nix" },
-    },
+    lsp = {},
   },
   {
     "nixd",
-    enabled = catUtils.isNixCats and nixCats('neonixdev') or false,
+    enabled = catUtils.isNixCats and nixCats or false,
     lsp = {
-      filetypes = { "nix" },
       settings = {
         nixd = {
           -- nixd requires some configuration.
