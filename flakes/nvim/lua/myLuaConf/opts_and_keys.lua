@@ -59,7 +59,6 @@ vim.opt.fixendofline = true
 vim.opt.endofline = true
 
 -- Save undo history
--- TODO: undotree
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
