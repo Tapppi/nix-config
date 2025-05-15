@@ -2,9 +2,11 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Disable if on an ancient typewriter, nvim should also auto-configure this if not set
+vim.opt.termguicolors = true
+
 -- [[ Setting options ]]
 -- See `:help vim.o`
--- NOTE: You can change these options as you wish!
 
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
@@ -12,55 +14,68 @@ vim.g.maplocalleader = ' '
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
+-- Set window borders and transparency
+vim.opt.winblend = 10
+-- vim.opt.winborder = 'single'
+
 -- Set highlight on search
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Preview substitutions live, as you type!
+vim.opt.incsearch = true
 vim.opt.inccommand = 'split'
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
 -- Make line numbers default
-vim.wo.number = true
+vim.opt.nu = true
+vim.opt.relativenumber = true
+-- Keep signcolumn on by default
+vim.opt.signcolumn = 'yes'
 
--- Enable mouse mode
-vim.o.mouse = 'a'
+-- Enable mouse for all modes
+vim.opt.mouse = 'a'
 
--- Indent
--- vim.o.smarttab = true
+-- Indent, try smartindent on file if cindent is not satisfactory
 vim.opt.cpoptions:append('I')
-vim.o.expandtab = true
--- vim.o.smartindent = true
--- vim.o.autoindent = true
--- vim.o.tabstop = 4
--- vim.o.softtabstop = 4
--- vim.o.shiftwidth = 4
+vim.opt.autoindent = true
+-- vim.opt.smartindent = true
+vim.opt.cindent = true
+vim.opt.expandtab = true
+vim.opt.smarttab = true
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.shiftwidth = 2
 
 -- stops line wrapping from being confusing
-vim.o.breakindent = true
+vim.opt.breakindent = true
+-- vim.opt.linebreak = true
+vim.opt.colorcolumn = '+2,+3'
+vim.opt.textwidth = 100
+
+vim.opt.fixendofline = true
+vim.opt.endofline = true
 
 -- Save undo history
-vim.o.undofile = true
+-- TODO: undotree
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.opt.undofile = true
 
--- Case-insensitive searching UNLESS \C or capital in search
-vim.o.ignorecase = true
-vim.o.smartcase = true
-
--- Keep signcolumn on by default
-vim.wo.signcolumn = 'yes'
-vim.wo.relativenumber = true
+-- Case-insensitive searching UNLESS \C or capital in search, ignores *,#,gd
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.tagcase = 'followscs'
 
 -- Decrease update time
-vim.o.updatetime = 250
-vim.o.timeoutlen = 300
+vim.opt.updatetime = 100
+vim.opt.timeoutlen = 500
 
 -- Set completeopt to have a better completion experience
-vim.o.completeopt = 'menu,preview,noselect'
-
--- NOTE: You should make sure your terminal supports this
-vim.o.termguicolors = true
+vim.opt.completeopt = 'menu,preview,noselect'
 
 -- [[ Disable auto comment on enter ]]
 -- See :help formatoptions
@@ -115,15 +130,6 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
-
-
--- kickstart.nvim starts you with this. 
--- But it constantly clobbers your system clipboard whenever you delete anything.
-
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
--- vim.o.clipboard = 'unnamedplus'
 
 -- You should instead use these keybindings so that they are still easy to use, but dont conflict
 vim.keymap.set({"v", "x", "n"}, '<leader>y', '"+y', { noremap = true, silent = true, desc = 'Yank to clipboard' })

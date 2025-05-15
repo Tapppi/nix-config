@@ -31,6 +31,22 @@
         "type": "github"
       }
     },
+    "plugins-rainbow-delimiters": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1744834150,
+        "narHash": "sha256-EeJvGtBwZgR7i9PEnGe4NTRiDQCgVKkSh5t8Xy5EYfE=",
+        "owner": "hiphish",
+        "repo": "rainbow-delimiters.nvim",
+        "rev": "55ad4fb76ab68460f700599b7449385f0c4e858e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hiphish",
+        "repo": "rainbow-delimiters.nvim",
+        "type": "github"
+      }
+    },
     "plugins-wezterm-types": {
       "flake": false,
       "locked": {
@@ -51,6 +67,7 @@
       "inputs": {
         "nixCats": "nixCats",
         "nixpkgs": "nixpkgs",
+        "plugins-rainbow-delimiters": "plugins-rainbow-delimiters",
         "plugins-wezterm-types": "plugins-wezterm-types"
       }
     }

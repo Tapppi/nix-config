@@ -85,6 +85,8 @@ return {
         completion = {
           menu = {
             scrolloff = 2,
+            min_width = 10,
+            max_height = 10,
             winblend = 15,
             draw = {
               -- We don't need label_description now because label and label_description are already
@@ -107,7 +109,9 @@ return {
             auto_show = true,
             auto_show_delay_ms = 500,
             window = {
+              min_width = 15,
               max_height = 20,
+              max_width = 65,
               winblend = 25,
             }
           },
@@ -150,3 +154,4 @@ return {
     end,
   },
 }
+

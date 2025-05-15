@@ -1,12 +1,3 @@
-local colorschemeName = nixCats('colorscheme')
-if not require('nixCatsUtils').isNixCats then
-  colorschemeName = 'catppuccin-mocha'
-end
--- Could I lazy load on colorscheme with lze?
--- sure. But I was going to call vim.cmd.colorscheme() during startup anyway
--- this is just an example, feel free to do a better job!
-vim.cmd.colorscheme(colorschemeName)
-
 local ok, notify = pcall(require, "notify")
 if ok then
   notify.setup({
@@ -104,14 +95,6 @@ require('lze').load {
     end,
   },
   {
-    "indent-blankline.nvim",
-    for_cat = 'general.extra',
-    event = "DeferredUIEnter",
-    after = function(plugin)
-      require("ibl").setup()
-    end,
-  },
-  {
     "nvim-surround",
     for_cat = 'general.always',
     event = "DeferredUIEnter",
@@ -139,20 +122,6 @@ require('lze').load {
       require('fidget').setup({})
     end,
   },
-  -- {
-  --   "hlargs",
-  --   for_cat = 'general.extra',
-  --   event = "DeferredUIEnter",
-  --   -- keys = "",
-  --   dep_of = { "nvim-lspconfig" },
-  --   after = function(plugin)
-  --     require('hlargs').setup {
-  --       color = '#32a88f',
-  --     }
-  --     vim.cmd([[hi clear @lsp.type.parameter]])
-  --     vim.cmd([[hi link @lsp.type.parameter Hlargs]])
-  --   end,
-  -- },
   {
     "lualine.nvim",
     for_cat = 'general.always',

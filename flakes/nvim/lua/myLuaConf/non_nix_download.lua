@@ -58,7 +58,7 @@ require('nixCatsUtils.catPacker').setup({
   -- lint and format
   { 'mfussenegger/nvim-lint', opt = true, },
   { 'stevearc/conform.nvim', opt = true, },
-  -- { 'gonstoll/wezterm-types', opt = true, }
+  { 'gonstoll/wezterm-types', opt = true, },
 
   -- dap
   { 'nvim-neotest/nvim-nio', opt = true, },
@@ -67,7 +67,6 @@ require('nixCatsUtils.catPacker').setup({
   { 'jay-babu/mason-nvim-dap.nvim', opt = true, },
   { 'mfussenegger/nvim-dap', opt = true, },
 
-  -- { 'm-demare/hlargs.nvim', },
   { 'mbbill/undotree', opt = true, },
   { 'tpope/vim-fugitive', opt = true, },
   { 'tpope/vim-rhubarb', opt = true, },
@@ -76,6 +75,7 @@ require('nixCatsUtils.catPacker').setup({
   { 'lewis6991/gitsigns.nvim', opt = true, },
   { 'nvim-lualine/lualine.nvim', opt = true, },
   { 'lukas-reineke/indent-blankline.nvim', opt = true, },
+  { 'hiphish/rainbow-delimiters.nvim', opt = true, },
   { 'numToStr/Comment.nvim', opt = true, as = "comment.nvim", },
   { 'kylechui/nvim-surround', opt = true, },
   {

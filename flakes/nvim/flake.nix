@@ -14,6 +14,11 @@
       url = "github:gonstoll/wezterm-types";
       flake = false;
     };
+    # Nixpkgs vimPlugins package has no maintainer and old version
+    "plugins-rainbow-delimiters" = {
+      url = "github:hiphish/rainbow-delimiters.nvim";
+      flake = false;
+    };
   };
 
   # see :help nixCats.flake.outputs
@@ -116,6 +121,7 @@
           ];
           extra = [
             oil-nvim
+            pkgs.neovimPlugins.rainbow-delimiters
             nvim-web-devicons
           ];
         };
@@ -164,7 +170,8 @@
         ];
         general = {
           blink = with pkgs.vimPlugins; [
-            luasnip # TODO: ???
+            # TODO: snippets setup, blink, keybinds etc.
+            luasnip
             cmp-cmdline
             blink-cmp
             blink-compat
