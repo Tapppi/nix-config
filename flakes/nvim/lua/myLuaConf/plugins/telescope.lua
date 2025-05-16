@@ -120,7 +120,35 @@ return {
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
 
+      -- Command for git root
       vim.api.nvim_create_user_command('LiveGrepGitRoot', live_grep_git_root, {})
+
+      -- Autocommands
+      local telescope_group = vim.api.nvim_create_augroup('Telescope_usr', { clear = true })
+
+      -- Remove winborder for telescope, until it support nvim 0.11+ 'winborder'
+      -- TODO: see https://github.com/nvim-telescope/telescope.nvim/issues/3436
+      vim.api.nvim_create_autocmd('User', {
+          pattern = 'TelescopeFindPre',
+          group = telescope_group,
+          callback = function()
+              vim.opt_local.winborder = 'none'
+              vim.api.nvim_create_autocmd('WinLeave', {
+                  once = true,
+                  callback = function()
+                      vim.opt_local.winborder = 'rounded'
+                  end,
+              })
+          end,
+      })
+
+      -- Show linenumbers in telescope
+      vim.api.nvim_create_autocmd('User', {
+          pattern = 'TelescopePreviewerLoaded',
+          group = telescope_group,
+          command = 'setlocal number',
+      })
     end,
   },
 }
+

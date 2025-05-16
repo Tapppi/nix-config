@@ -32,7 +32,7 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Set window borders and transparency
 vim.opt.winblend = 10
--- vim.opt.winborder = 'single'
+vim.opt.winborder = 'rounded'
 
 -- Set highlight on search
 vim.opt.hlsearch = true
@@ -85,21 +85,23 @@ vim.opt.completeopt = 'menu,preview,noselect'
 
 -- [[ Disable auto comment on enter ]]
 -- See :help formatoptions
+local filetype_fo_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
 vim.api.nvim_create_autocmd("FileType", {
   desc = "remove formatoptions",
   callback = function()
     vim.opt.formatoptions:remove({ "c", "r", "o" })
   end,
+  group = filetype_fo_group,
 })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
-local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
+local yank_hl_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
 vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function()
     vim.highlight.on_yank()
   end,
-  group = highlight_group,
+  group = yank_hl_group,
   pattern = '*',
 })
 
