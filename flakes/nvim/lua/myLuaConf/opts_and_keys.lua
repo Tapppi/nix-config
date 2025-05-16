@@ -9,8 +9,24 @@ vim.opt.termguicolors = true
 -- See `:help vim.o`
 
 -- Sets how neovim will display certain whitespace characters in the editor.
---  See `:help 'list'`
---  and `:help 'listchars'`
+
+-- Save undo history
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.opt.undofile = true
+
+-- Case-insensitive searching UNLESS \C or capital in search, ignores *,#,gd
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.tagcase = 'followscs'
+
+-- Decrease update time
+vim.opt.updatetime = 200
+-- Wait for mappings for 300ms after last keypress
+vim.opt.timeoutlen = 300
+
+-- Show tabs and trailing spaces with glyphs, see `:help 'list'`
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
@@ -38,6 +54,7 @@ vim.opt.signcolumn = 'yes'
 -- Enable mouse for all modes
 vim.opt.mouse = 'a'
 
+--{{{ Editorconfig related stuff
 -- Indent, try smartindent on file if cindent is not satisfactory
 vim.opt.cpoptions:append('I')
 vim.opt.autoindent = true
@@ -45,9 +62,11 @@ vim.opt.autoindent = true
 vim.opt.cindent = true
 vim.opt.expandtab = true
 vim.opt.smarttab = true
-vim.opt.tabstop = 2
-vim.opt.softtabstop = 2
-vim.opt.shiftwidth = 2
+-- Tab sizes are set by vim-sleuth automatically and respect .editorconfig
+-- Keep at default like :help suggests, and use sts and shiftwidth
+-- vim.opt.tabstop = 8
+vim.opt.softtabstop = 4
+vim.opt.shiftwidth = 4
 
 -- stops line wrapping from being confusing
 vim.opt.breakindent = true
@@ -55,23 +74,11 @@ vim.opt.breakindent = true
 vim.opt.colorcolumn = '+2,+3'
 vim.opt.textwidth = 100
 
+-- End of line
 vim.opt.fixendofline = true
 vim.opt.endofline = true
+--}}}
 
--- Save undo history
-vim.opt.swapfile = false
-vim.opt.backup = false
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
-vim.opt.undofile = true
-
--- Case-insensitive searching UNLESS \C or capital in search, ignores *,#,gd
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
-vim.opt.tagcase = 'followscs'
-
--- Decrease update time
-vim.opt.updatetime = 100
-vim.opt.timeoutlen = 500
 
 -- Set completeopt to have a better completion experience
 vim.opt.completeopt = 'menu,preview,noselect'
