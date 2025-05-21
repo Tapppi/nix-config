@@ -1,12 +1,14 @@
-local colorschemeName = nixCats("colorscheme")
+_G.colorschemeName = nixCats("colorscheme")
 
-if not require("nixCatsUtils").isNixCats then
-  colorschemeName = "catppuccin-mocha"
+if not _G.colorschemeName then
+  _G.colorschemeName = "catppuccin-mocha"
 end
+
+vim.cmd.colorscheme(colorschemeName)
 
 if string.find(colorschemeName, "^catppuccin") then
   require("catppuccin").setup({
-    -- transparent_background = true,
+    transparent_background = true,
     dim_inactive = {
       enabled = true,
       shade = "dark",
@@ -18,11 +20,7 @@ if string.find(colorschemeName, "^catppuccin") then
       --  enabled = true,
       --  color = "teal",
       --},
-      ---@diagnostic disable-next-line: assign-type-mismatch
-      gitsigns = {
-        enabled = true,
-        -- transparent = true,
-      },
+      gitsigns = true,
       indent_blankline = {
         enabled = true,
         scope_color = 'sapphire',
@@ -51,15 +49,7 @@ if string.find(colorschemeName, "^catppuccin") then
   })
 end
 
-vim.cmd.colorscheme(colorschemeName)
-
 require("lze").load {
---  {
---    "rainbow-delimiters.nvim",
---    for_cat = "general.extra",
---    event = "DeferredUIEnter",
---    dep_of = "indent-blankline.nvim",
---  },
   {
     "indent-blankline.nvim",
     for_cat = "general.extra",

@@ -12,12 +12,7 @@ if ok then
 end
 
 if nixCats('general.extra') then
-  -- I didnt want to bother with lazy loading this.
-  -- I could put it in opt and put it in a spec anyway
-  -- and then not set any handlers and it would load at startup,
-  -- but why... I guess I could make it load
-  -- after the other lze definitions in the next call using priority value?
-  -- didnt seem necessary.
+  -- No lazy loading for oil, could be, but what is the point?
   vim.g.loaded_netrwPlugin = 1
   require("oil").setup({
     default_file_explorer = true,
@@ -28,7 +23,7 @@ if nixCats('general.extra') then
       "icon",
       "permissions",
       "size",
-      -- "mtime",
+      "mtime",
     },
     keymaps = {
       ["g?"] = "actions.show_help",
@@ -59,11 +54,6 @@ require('lze').load {
   { import = "myLuaConf.plugins.completion", },
   {
     "markdown-preview.nvim",
-    -- NOTE: for_cat is a custom handler that just sets enabled value for us,
-    -- based on result of nixCats('cat.name') and allows us to set a different default if we wish
-    -- it is defined in luaUtils template in lua/nixCatsUtils/lzUtils.lua
-    -- you could replace this with enabled = nixCats('cat.name') == true
-    -- if you didnt care to set a different default for when not using nix than the default you already set
     for_cat = 'general.markdown',
     cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle", },
     ft = "markdown",
@@ -72,7 +62,7 @@ require('lze').load {
       {"<leader>ms", "<cmd>MarkdownPreviewStop <CR>", mode = {"n"}, noremap = true, desc = "markdown preview stop"},
       {"<leader>mt", "<cmd>MarkdownPreviewToggle <CR>", mode = {"n"}, noremap = true, desc = "markdown preview toggle"},
     },
-    before = function(plugin)
+    before = function()
       vim.g.mkdp_auto_close = 0
     end,
   },
@@ -90,7 +80,7 @@ require('lze').load {
     "comment.nvim",
     for_cat = 'general.extra',
     event = "DeferredUIEnter",
-    after = function(plugin)
+    after = function()
       require('Comment').setup()
     end,
   },
@@ -99,7 +89,7 @@ require('lze').load {
     for_cat = 'general.always',
     event = "DeferredUIEnter",
     -- keys = "",
-    after = function(plugin)
+    after = function()
       require('nvim-surround').setup()
     end,
   },
@@ -113,25 +103,21 @@ require('lze').load {
       vim.g.startuptime_exe_path = nixCats.packageBinPath
     end,
   },
+  -- Unintrusive progress notifications, e.g. LSP
   {
     "fidget.nvim",
     for_cat = 'general.extra',
     event = "DeferredUIEnter",
     -- keys = "",
-    after = function(plugin)
+    after = function()
       require('fidget').setup({})
     end,
   },
   {
     "lualine.nvim",
     for_cat = 'general.always',
-    -- cmd = { "" },
     event = "DeferredUIEnter",
-    -- ft = "",
-    -- keys = "",
-    -- colorscheme = "",
-    after = function (plugin)
-
+    after = function()
       require('lualine').setup({
         options = {
           icons_enabled = false,
@@ -156,8 +142,7 @@ require('lze').load {
         },
         tabline = {
           lualine_a = { 'buffers' },
-          -- if you use lualine-lsp-progress, I have mine here instead of fidget
-          -- lualine_b = { 'lsp_progress', },
+          lualine_b = { 'lsp_progress', },
           lualine_z = { 'tabs' }
         },
       })
@@ -171,7 +156,7 @@ require('lze').load {
     -- ft = "",
     -- keys = "",
     -- colorscheme = "",
-    after = function (plugin)
+    after = function()
       require('gitsigns').setup({
         -- See `:help gitsigns.txt`
         signs = {
@@ -213,10 +198,10 @@ require('lze').load {
 
           -- Actions
           -- visual mode
-          map('v', '<leader>hs', function()
+          map('v', '<leader>gs', function()
             gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
           end, { desc = 'stage git hunk' })
-          map('v', '<leader>hr', function()
+          map('v', '<leader>gr', function()
             gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
           end, { desc = 'reset git hunk' })
           -- normal mode
@@ -255,7 +240,7 @@ require('lze').load {
     -- ft = "",
     -- keys = "",
     -- colorscheme = "",
-    after = function (plugin)
+    after = function()
       require('which-key').setup({
       })
       require('which-key').add {

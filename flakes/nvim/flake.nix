@@ -116,6 +116,7 @@
             lze
             lzextras
             vim-repeat
+            vim-sleuth
             plenary-nvim
             nvim-notify # TODO: Replace with snacks notify
           ];
@@ -123,6 +124,7 @@
             oil-nvim
             pkgs.neovimPlugins.rainbow-delimiters
             nvim-web-devicons
+            helpview-nvim
           ];
         };
         # You can retreive information from the
@@ -180,7 +182,7 @@
           treesitter = with pkgs.vimPlugins; [
             nvim-treesitter-textobjects
             nvim-treesitter.withAllGrammars
-            # This is for if you only want some of the grammars
+            # If only want some of the grammars
             # (nvim-treesitter.withPlugins (
             #   plugins: with plugins; [
             #     nix
@@ -197,14 +199,12 @@
             nvim-lspconfig
             lualine-nvim
             gitsigns-nvim
-            vim-sleuth
             vim-fugitive
             vim-rhubarb
             nvim-surround
           ];
           extra = with pkgs.vimPlugins; [
             fidget-nvim
-            # lualine-lsp-progress
             which-key-nvim
             comment-nvim
             undotree

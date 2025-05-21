@@ -65,6 +65,9 @@ return {
     -- event = "",
     -- ft = "",
     keys = {
+        -- Do we want picker cache hotkeys?
+        -- Do we want a md task picker? (Ref @linkarzu dotfiles and snacks picker video)
+        -- Snacks picker? At least check out the telescope and snacks picker list and pick em, hehe
       { "<leader>sM", '<cmd>Telescope notify<CR>', mode = {"n"}, desc = '[S]earch [M]essage', },
       { "<leader>sp",live_grep_git_root, mode = {"n"}, desc = '[S]earch git [P]roject root', },
       { "<leader>/", function()
@@ -93,12 +96,12 @@ return {
       { "<leader>sh", function() return require('telescope.builtin').help_tags() end, mode = {"n"}, desc = '[S]earch [H]elp', },
     },
     -- colorscheme = "",
-    load = function (name)
+    load = function(name)
         vim.cmd.packadd(name)
         vim.cmd.packadd("telescope-fzf-native.nvim")
         vim.cmd.packadd("telescope-ui-select.nvim")
     end,
-    after = function (plugin)
+    after = function()
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`

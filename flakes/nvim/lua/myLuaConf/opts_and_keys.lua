@@ -64,7 +64,7 @@ vim.opt.expandtab = true
 vim.opt.smarttab = true
 -- Tab sizes are set by vim-sleuth automatically and respect .editorconfig
 -- Keep at default like :help suggests, and use sts and shiftwidth
--- vim.opt.tabstop = 8
+vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
 

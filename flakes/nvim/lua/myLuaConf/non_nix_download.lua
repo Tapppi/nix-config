@@ -42,10 +42,6 @@ require('nixCatsUtils.catPacker').setup({
   { 'williamboman/mason-lspconfig.nvim', opt = true, },
   { 'j-hui/fidget.nvim', opt = true, },
   { 'neovim/nvim-lspconfig', opt = true, },
-
-  --  NOTE:  we take care of lazy loading elsewhere in an autocommand
-    -- so that we can use the same code on and off nix.
-    -- so here we just tell it not to auto load it
   { 'folke/lazydev.nvim', opt = true, },
 
   -- completion
@@ -67,6 +63,9 @@ require('nixCatsUtils.catPacker').setup({
   { 'jay-babu/mason-nvim-dap.nvim', opt = true, },
   { 'mfussenegger/nvim-dap', opt = true, },
 
+  -- general UX
+  { 'hiphish/rainbow-delimiters.nvim' },
+  { 'OXY2DEV/helpview.nvim' },
   { 'mbbill/undotree', opt = true, },
   { 'tpope/vim-fugitive', opt = true, },
   { 'tpope/vim-rhubarb', opt = true, },
@@ -75,7 +74,6 @@ require('nixCatsUtils.catPacker').setup({
   { 'lewis6991/gitsigns.nvim', opt = true, },
   { 'nvim-lualine/lualine.nvim', opt = true, },
   { 'lukas-reineke/indent-blankline.nvim', opt = true, },
-  { 'hiphish/rainbow-delimiters.nvim', opt = true, },
   { 'numToStr/Comment.nvim', opt = true, as = "comment.nvim", },
   { 'kylechui/nvim-surround', opt = true, },
   {
