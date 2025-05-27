@@ -11,44 +11,11 @@ if ok then
   end, { desc = "dismiss notify popup and clear hlsearch" })
 end
 
-if nixCats('general.extra') then
-  -- No lazy loading for oil, could be, but what is the point?
-  vim.g.loaded_netrwPlugin = 1
-  require("oil").setup({
-    default_file_explorer = true,
-    view_options = {
-      show_hidden = true
-    },
-    columns = {
-      "icon",
-      "permissions",
-      "size",
-      "mtime",
-    },
-    keymaps = {
-      ["g?"] = "actions.show_help",
-      ["<CR>"] = "actions.select",
-      ["<C-s>"] = "actions.select_vsplit",
-      ["<C-h>"] = "actions.select_split",
-      ["<C-t>"] = "actions.select_tab",
-      ["<C-p>"] = "actions.preview",
-      ["<C-c>"] = "actions.close",
-      ["<C-l>"] = "actions.refresh",
-      ["-"] = "actions.parent",
-      ["_"] = "actions.open_cwd",
-      ["`"] = "actions.cd",
-      ["~"] = "actions.tcd",
-      ["gs"] = "actions.change_sort",
-      ["gx"] = "actions.open_external",
-      ["g."] = "actions.toggle_hidden",
-      ["g\\"] = "actions.toggle_trash",
-    },
-  })
-  vim.keymap.set("n", "-", "<cmd>Oil<CR>", { noremap = true, desc = 'Open Parent Directory' })
-  vim.keymap.set("n", "<leader>-", "<cmd>Oil .<CR>", { noremap = true, desc = 'Open nvim root directory' })
-end
-
 require('lze').load {
+  -- non-lazy
+  { import = "myLuaConf.plugins.snacks", },
+  { import = "myLuaConf.plugins.oil", },
+  -- lazy
   { import = "myLuaConf.plugins.telescope", },
   { import = "myLuaConf.plugins.treesitter", },
   { import = "myLuaConf.plugins.completion", },
@@ -88,7 +55,6 @@ require('lze').load {
     "nvim-surround",
     for_cat = 'general.always',
     event = "DeferredUIEnter",
-    -- keys = "",
     after = function()
       require('nvim-surround').setup()
     end,
@@ -108,7 +74,6 @@ require('lze').load {
     "fidget.nvim",
     for_cat = 'general.extra',
     event = "DeferredUIEnter",
-    -- keys = "",
     after = function()
       require('fidget').setup({})
     end,
@@ -152,10 +117,6 @@ require('lze').load {
     "gitsigns.nvim",
     for_cat = 'general.always',
     event = "DeferredUIEnter",
-    -- cmd = { "" },
-    -- ft = "",
-    -- keys = "",
-    -- colorscheme = "",
     after = function()
       require('gitsigns').setup({
         -- See `:help gitsigns.txt`

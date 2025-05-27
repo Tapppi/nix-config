@@ -31,16 +31,17 @@ if string.find(colorschemeName, "^catppuccin") then
       --  lsp = true,
       --}
       rainbow_delimiters = true,
+      -- TODO: trouble = true,
       -- TODO: harpoon = true,
-      -- TODO: mini = true,
-      -- TODO: snacks = true,
+      mini = true,
+      snacks = true,
       notifier = true,
       notify = true,
       markdown = true,
       -- TODO: noice = true,
       dap = true,
       dap_ui = true,
-      -- TODO: ufo = true, 
+      -- TODO: ufo = true,
       which_key = true,
 
 
@@ -49,31 +50,37 @@ if string.find(colorschemeName, "^catppuccin") then
   })
 end
 
-require("lze").load {
-  {
-    "indent-blankline.nvim",
-    for_cat = "general.extra",
-    event = "DeferredUIEnter",
-    after = function(_)
-      -- TODO: use RainbowDelimiter* hl groups and set them to alt theme of catppuccin for better separation
-      local highlight = {
-        "RainbowRed",
-        "RainbowYellow",
-        "RainbowBlue",
-        "RainbowOrange",
-        "RainbowGreen",
-        "RainbowViolet",
-        "RainbowCyan",
-      }
-      require("ibl").setup({
-        scope = {
-          highlight = highlight
-        },
-      })
-
-      vim.g.rainbow_delimiters = { highlight = highlight }
-      local hooks = require "ibl.hooks"
-      hooks.register(hooks.type.SCOPE_HIGHLIGHT, hooks.builtin.scope_highlight_from_extmark)
-    end,
+-- Define rainbow delimiters highlight groups, also used for IBL/Snacks.scope
+-- The hl groups come from catppuccin rainbow_delimiters integration
+vim.g.rainbow_delimiters = {
+  highlight = {
+    "RainbowDelimiterRed",
+    "RainbowDelimiterYellow",
+    "RainbowDelimiterBlue",
+    "RainbowDelimiterOrange",
+    "RainbowDelimiterGreen",
+    "RainbowDelimiterViolet",
+    "RainbowDelimiterCyan",
   },
 }
+
+if not nixCats("snacks") and nixCats("nosnacks") then
+  -- snacks indent is configured in plugins/snacks.lua
+  require("lze").load {
+    {
+      "indent-blankline.nvim",
+      for_cat = "nosnacks",
+      event = "DeferredUIEnter",
+      after = function(_)
+        require("ibl").setup({
+          scope = {
+            highlight = vim.g.rainbow_delimiters.highlight,
+          },
+        })
+
+        local hooks = require "ibl.hooks"
+        hooks.register(hooks.type.SCOPE_HIGHLIGHT, hooks.builtin.scope_highlight_from_extmark)
+      end,
+    },
+  }
+end

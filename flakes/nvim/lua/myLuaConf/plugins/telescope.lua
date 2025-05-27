@@ -57,13 +57,12 @@ end
 return {
   {
     "telescope.nvim",
-    for_cat = 'general.telescope',
+    -- We use snacks picker when snacks is enabled
+    enabled = not nixCats("snacks") and nixCats("nosnacks"),
     cmd = { "Telescope", "LiveGrepGitRoot" },
     -- NOTE: our on attach function defines keybinds that call telescope.
     -- so, the on_require handler will load telescope when we use those.
     on_require = { "telescope", },
-    -- event = "",
-    -- ft = "",
     keys = {
         -- Do we want picker cache hotkeys?
         -- Do we want a md task picker? (Ref @linkarzu dotfiles and snacks picker video)

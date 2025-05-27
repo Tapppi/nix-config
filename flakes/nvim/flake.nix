@@ -14,11 +14,6 @@
       url = "github:gonstoll/wezterm-types";
       flake = false;
     };
-    # Nixpkgs vimPlugins package has no maintainer and old version
-    "plugins-rainbow-delimiters" = {
-      url = "github:hiphish/rainbow-delimiters.nvim";
-      flake = false;
-    };
   };
 
   # see :help nixCats.flake.outputs
@@ -111,6 +106,11 @@
         debug = with pkgs.vimPlugins; [
           nvim-nio
         ];
+        snacks = with pkgs.vimPlugins; [
+          snacks-nvim
+        ];
+        nosnacks = with pkgs.vimPlugins; [
+        ];
         general = with pkgs.vimPlugins; {
           always = [
             lze
@@ -122,9 +122,9 @@
           ];
           extra = [
             oil-nvim
-            pkgs.neovimPlugins.rainbow-delimiters
             nvim-web-devicons
             helpview-nvim
+            rainbow-delimiters-nvim
           ];
         };
         # You can retreive information from the
@@ -170,6 +170,18 @@
           # This is how you enable plugins added as flake inputs
           pkgs.neovimPlugins.wezterm-types
         ];
+
+        mini = with pkgs.vimPlugins; [
+          mini-nvim
+        ];
+        nomini = with pkgs.vimPlugins; [
+        ];
+        nosnacks = with pkgs.vimPlugins; [
+          telescope-fzf-native-nvim
+          telescope-ui-select-nvim
+          telescope-nvim
+          indent-blankline-nvim
+        ];
         general = {
           blink = with pkgs.vimPlugins; [
             # TODO: snippets setup, blink, keybinds etc.
@@ -190,11 +202,7 @@
             #   ]
             # ))
           ];
-          telescope = with pkgs.vimPlugins; [
-            telescope-fzf-native-nvim
-            telescope-ui-select-nvim
-            telescope-nvim
-          ];
+
           always = with pkgs.vimPlugins; [
             nvim-lspconfig
             lualine-nvim
@@ -208,7 +216,6 @@
             which-key-nvim
             comment-nvim
             undotree
-            indent-blankline-nvim
             vim-startuptime
           ];
         };
@@ -271,6 +278,11 @@
       markdown = true;
       lua = true;
       neonixdev = true;
+
+      snacks = false;
+      nosnacks = true;
+      mini = false;
+      nomini = true;
 
       # enabling this category will enable the go category,
       # and ALSO debug.go and debug.default due to our extraCats in categoryDefinitions.

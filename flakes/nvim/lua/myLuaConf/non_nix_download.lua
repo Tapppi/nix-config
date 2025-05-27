@@ -33,9 +33,15 @@ require('nixCatsUtils.catPacker').setup({
   { 'nvim-treesitter/nvim-treesitter-textobjects', opt = true, },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate', opt = true, },
 
-  { 'nvim-telescope/telescope-fzf-native.nvim', build = ':!which make && make', opt = true, },
-  { 'nvim-telescope/telescope-ui-select.nvim', opt = true, },
-  {'nvim-telescope/telescope.nvim', opt = true, },
+  { 'echasnovski/mini.nvim', opt = true, },
+  -- Non-mini
+
+  { 'folke/snacks.nvim' },
+  -- Non-snacks
+  -- { 'nvim-telescope/telescope-fzf-native.nvim', build = ':!which make && make', opt = true, },
+  -- { 'nvim-telescope/telescope-ui-select.nvim', opt = true, },
+  -- { 'nvim-telescope/telescope.nvim', opt = true, },
+  -- { 'lukas-reineke/indent-blankline.nvim', opt = true, },
 
   -- lsp
   { 'williamboman/mason.nvim', opt = true, },
@@ -64,16 +70,15 @@ require('nixCatsUtils.catPacker').setup({
   { 'mfussenegger/nvim-dap', opt = true, },
 
   -- general UX
-  { 'hiphish/rainbow-delimiters.nvim' },
+  { 'tpope/vim-sleuth' },
   { 'OXY2DEV/helpview.nvim' },
+  { 'hiphish/rainbow-delimiters.nvim' },
   { 'mbbill/undotree', opt = true, },
   { 'tpope/vim-fugitive', opt = true, },
   { 'tpope/vim-rhubarb', opt = true, },
-  { 'tpope/vim-sleuth', opt = true, },
   { 'folke/which-key.nvim', opt = true, },
   { 'lewis6991/gitsigns.nvim', opt = true, },
   { 'nvim-lualine/lualine.nvim', opt = true, },
-  { 'lukas-reineke/indent-blankline.nvim', opt = true, },
   { 'numToStr/Comment.nvim', opt = true, as = "comment.nvim", },
   { 'kylechui/nvim-surround', opt = true, },
   {
