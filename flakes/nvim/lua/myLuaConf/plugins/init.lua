@@ -46,10 +46,23 @@ require('lze').load {
   },
   {
     "comment.nvim",
-    for_cat = 'general.extra',
+    for_cat = "general.extra",
     event = "DeferredUIEnter",
     after = function()
-      require('Comment').setup()
+      require("Comment").setup({
+        pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+      })
+    end,
+  },
+  {
+    "nvim-ts-context-commentstring",
+    for_cat = "general.extra",
+    dep_of = "comment.nvim",
+    event = "DeferredUIEnter",
+    after = function()
+      require("ts_context_commentstring").setup({
+        enable_autocmd = false,
+      })
     end,
   },
   {

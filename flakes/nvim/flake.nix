@@ -215,6 +215,7 @@
             fidget-nvim
             which-key-nvim
             comment-nvim
+            nvim-ts-context-commentstring
             undotree
             vim-startuptime
           ];
