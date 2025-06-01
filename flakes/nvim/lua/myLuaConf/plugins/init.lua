@@ -38,9 +38,10 @@ require('lze').load {
     for_cat = 'general.extra',
     cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo", },
     keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" }, },
-    before = function(_)
+    before = function()
       vim.g.undotree_WindowLayout = 1
       vim.g.undotree_SplitWidth = 40
+      vim.g.undotree_SetFocusWhenToggle = 1
     end,
   },
   {
