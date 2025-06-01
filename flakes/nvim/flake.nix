@@ -175,6 +175,7 @@
           mini-nvim
         ];
         nomini = with pkgs.vimPlugins; [
+          nvim-surround
         ];
         nosnacks = with pkgs.vimPlugins; [
           telescope-fzf-native-nvim
@@ -209,7 +210,6 @@
             gitsigns-nvim
             vim-fugitive
             vim-rhubarb
-            nvim-surround
           ];
           extra = with pkgs.vimPlugins; [
             fidget-nvim
@@ -224,11 +224,11 @@
 
       # shared libraries to be added to LD_LIBRARY_PATH
       # variable available to nvim runtime
-      sharedLibraries = {
-        general = with pkgs; [ # <- this would be included if any of the subcategories of general are
-          # libgit2
-        ];
-      };
+      # sharedLibraries = {
+      #   general = with pkgs; [ # <- this would be included if any of the subcategories of general are
+      #     # libgit2
+      #   ];
+      # };
 
       # environmentVariables: Allows setting env vars for terminal and plugins at run time
 
@@ -282,7 +282,7 @@
 
       snacks = false;
       nosnacks = true;
-      mini = false;
+      mini = true;
       nomini = true;
 
       # enabling this category will enable the go category,

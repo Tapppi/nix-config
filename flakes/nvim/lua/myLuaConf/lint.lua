@@ -2,17 +2,13 @@ require('lze').load {
   {
     "nvim-lint",
     for_cat = 'lint',
-    -- cmd = { "" },
     event = "FileType",
-    -- ft = "",
-    -- keys = "",
-    -- colorscheme = "",
-    after = function (plugin)
+    after = function()
       require('lint').linters_by_ft = {
         gitcommit = { 'gitlint' },
         bash = { 'shellcheck' },
         zsh = { 'zsh', 'shellcheck' },
-        markdown = { 'vale' , 'markdownlint-cli2' },
+        markdown = { 'vale', 'markdownlint-cli2' },
         go = { 'golangci-lint' },
         -- javascript = { 'eslint' },
         -- typescript = { 'eslint' },

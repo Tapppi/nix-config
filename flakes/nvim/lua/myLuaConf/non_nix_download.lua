@@ -33,8 +33,9 @@ require('nixCatsUtils.catPacker').setup({
   { 'nvim-treesitter/nvim-treesitter-textobjects', opt = true, },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate', opt = true, },
 
-  { 'echasnovski/mini.nvim', opt = true, },
+  { 'echasnovski/mini.nvim', opt = true, version = false },
   -- Non-mini
+  -- { 'kylechui/nvim-surround', opt = true, },
 
   { 'folke/snacks.nvim' },
   -- Non-snacks

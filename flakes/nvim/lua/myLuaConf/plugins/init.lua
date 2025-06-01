@@ -11,17 +11,18 @@ if ok then
   end, { desc = "dismiss notify popup and clear hlsearch" })
 end
 
-require('lze').load {
+require("lze").load {
   -- non-lazy
   { import = "myLuaConf.plugins.snacks", },
   { import = "myLuaConf.plugins.oil", },
   -- lazy
+  { import = "myLuaConf.plugins.mini", },
   { import = "myLuaConf.plugins.telescope", },
   { import = "myLuaConf.plugins.treesitter", },
   { import = "myLuaConf.plugins.completion", },
   {
     "markdown-preview.nvim",
-    for_cat = 'general.markdown',
+    for_cat = "general.markdown",
     cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle", },
     ft = "markdown",
     keys = {
@@ -35,7 +36,7 @@ require('lze').load {
   },
   {
     "undotree",
-    for_cat = 'general.extra',
+    for_cat = "general.extra",
     cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo", },
     keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" }, },
     before = function()
@@ -67,17 +68,17 @@ require('lze').load {
   },
   {
     "nvim-surround",
-    for_cat = 'general.always',
+    for_cat = "general.always",
     event = "DeferredUIEnter",
     after = function()
-      require('nvim-surround').setup()
+      require("nvim-surround").setup()
     end,
   },
   {
     "vim-startuptime",
-    for_cat = 'general.extra',
+    for_cat = "general.extra",
     cmd = { "StartupTime" },
-    before = function(_)
+    before = function()
       vim.g.startuptime_event_width = 0
       vim.g.startuptime_tries = 10
       vim.g.startuptime_exe_path = nixCats.packageBinPath
@@ -86,60 +87,60 @@ require('lze').load {
   -- Unintrusive progress notifications, e.g. LSP
   {
     "fidget.nvim",
-    for_cat = 'general.extra',
+    for_cat = "general.extra",
     event = "DeferredUIEnter",
     after = function()
-      require('fidget').setup({})
+      require("fidget").setup({})
     end,
   },
   {
     "lualine.nvim",
-    for_cat = 'general.always',
+    for_cat = "general.always",
     event = "DeferredUIEnter",
     after = function()
-      require('lualine').setup({
+      require("lualine").setup({
         options = {
           icons_enabled = false,
           theme = colorschemeName,
-          component_separators = '|',
-          section_separators = '',
+          component_separators = "|",
+          section_separators = "",
         },
         sections = {
           lualine_c = {
             {
-              'filename', path = 1, status = true,
+              "filename", path = 1, status = true,
             },
           },
         },
         inactive_sections = {
           lualine_b = {
             {
-              'filename', path = 3, status = true,
+              "filename", path = 3, status = true,
             },
           },
-          lualine_x = {'filetype'},
+          lualine_x = {"filetype"},
         },
         tabline = {
-          lualine_a = { 'buffers' },
-          lualine_b = { 'lsp_progress', },
-          lualine_z = { 'tabs' }
+          lualine_a = { "buffers" },
+          lualine_b = { "lsp_progress", },
+          lualine_z = { "tabs" }
         },
       })
     end,
   },
   {
     "gitsigns.nvim",
-    for_cat = 'general.always',
+    for_cat = "general.always",
     event = "DeferredUIEnter",
     after = function()
-      require('gitsigns').setup({
+      require("gitsigns").setup({
         -- See `:help gitsigns.txt`
         signs = {
-          add = { text = '+' },
-          change = { text = '~' },
-          delete = { text = '_' },
-          topdelete = { text = '‾' },
-          changedelete = { text = '~' },
+          add = { text = "+" },
+          change = { text = "~" },
+          delete = { text = "_" },
+          topdelete = { text = "‾" },
+          changedelete = { text = "~" },
         },
         on_attach = function(bufnr)
           local gs = package.loaded.gitsigns
@@ -151,55 +152,55 @@ require('lze').load {
           end
 
           -- Navigation
-          map({ 'n', 'v' }, ']c', function()
+          map({ "n", "v" }, "]c", function()
             if vim.wo.diff then
-              return ']c'
+              return "]c"
             end
             vim.schedule(function()
               gs.next_hunk()
             end)
-            return '<Ignore>'
-          end, { expr = true, desc = 'Jump to next hunk' })
+            return "<Ignore>"
+          end, { expr = true, desc = "Jump to next hunk" })
 
-          map({ 'n', 'v' }, '[c', function()
+          map({ "n", "v" }, "[c", function()
             if vim.wo.diff then
-              return '[c'
+              return "[c"
             end
             vim.schedule(function()
               gs.prev_hunk()
             end)
-            return '<Ignore>'
-          end, { expr = true, desc = 'Jump to previous hunk' })
+            return "<Ignore>"
+          end, { expr = true, desc = "Jump to previous hunk" })
 
           -- Actions
           -- visual mode
-          map('v', '<leader>gs', function()
-            gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-          end, { desc = 'stage git hunk' })
-          map('v', '<leader>gr', function()
-            gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-          end, { desc = 'reset git hunk' })
+          map("v", "<leader>gs", function()
+            gs.stage_hunk { vim.fn.line ".", vim.fn.line "v" }
+          end, { desc = "stage git hunk" })
+          map("v", "<leader>gr", function()
+            gs.reset_hunk { vim.fn.line ".", vim.fn.line "v" }
+          end, { desc = "reset git hunk" })
           -- normal mode
-          map('n', '<leader>gs', gs.stage_hunk, { desc = 'git stage hunk' })
-          map('n', '<leader>gr', gs.reset_hunk, { desc = 'git reset hunk' })
-          map('n', '<leader>gS', gs.stage_buffer, { desc = 'git Stage buffer' })
-          map('n', '<leader>gu', gs.undo_stage_hunk, { desc = 'undo stage hunk' })
-          map('n', '<leader>gR', gs.reset_buffer, { desc = 'git Reset buffer' })
-          map('n', '<leader>gp', gs.preview_hunk, { desc = 'preview git hunk' })
-          map('n', '<leader>gb', function()
+          map("n", "<leader>gs", gs.stage_hunk, { desc = "git stage hunk" })
+          map("n", "<leader>gr", gs.reset_hunk, { desc = "git reset hunk" })
+          map("n", "<leader>gS", gs.stage_buffer, { desc = "git Stage buffer" })
+          map("n", "<leader>gu", gs.undo_stage_hunk, { desc = "undo stage hunk" })
+          map("n", "<leader>gR", gs.reset_buffer, { desc = "git Reset buffer" })
+          map("n", "<leader>gp", gs.preview_hunk, { desc = "preview git hunk" })
+          map("n", "<leader>gb", function()
             gs.blame_line { full = false }
-          end, { desc = 'git blame line' })
-          map('n', '<leader>gd', gs.diffthis, { desc = 'git diff against index' })
-          map('n', '<leader>gD', function()
-            gs.diffthis '~'
-          end, { desc = 'git diff against last commit' })
+          end, { desc = "git blame line" })
+          map("n", "<leader>gd", gs.diffthis, { desc = "git diff against index" })
+          map("n", "<leader>gD", function()
+            gs.diffthis "~"
+          end, { desc = "git diff against last commit" })
 
           -- Toggles
-          map('n', '<leader>gtb', gs.toggle_current_line_blame, { desc = 'toggle git blame line' })
-          map('n', '<leader>gtd', gs.toggle_deleted, { desc = 'toggle git show deleted' })
+          map("n", "<leader>gtb", gs.toggle_current_line_blame, { desc = "toggle git blame line" })
+          map("n", "<leader>gtd", gs.toggle_deleted, { desc = "toggle git show deleted" })
 
           -- Text object
-          map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { desc = 'select git hunk' })
+          map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "select git hunk" })
         end,
       })
       vim.cmd([[hi GitSignsAdd guifg=#04de21]])
@@ -209,16 +210,16 @@ require('lze').load {
   },
   {
     "which-key.nvim",
-    for_cat = 'general.extra',
+    for_cat = "general.extra",
     -- cmd = { "" },
     event = "DeferredUIEnter",
     -- ft = "",
     -- keys = "",
     -- colorscheme = "",
     after = function()
-      require('which-key').setup({
+      require("which-key").setup({
       })
-      require('which-key').add {
+      require("which-key").add {
         { "<leader><leader>", group = "buffer commands" },
         { "<leader><leader>_", hidden = true },
         { "<leader>c", group = "[c]ode" },
