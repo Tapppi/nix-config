@@ -81,6 +81,15 @@
         debug = with pkgs; {
           go = [ delve ];
         };
+        rust = with pkgs; [
+          rust-analyzer
+        ];
+        zig = with pkgs; [
+          zls
+        ];
+        typescript = with pkgs; [
+          typescript
+        ];
         go = with pkgs; [
           gopls
           gotools
@@ -111,6 +120,9 @@
         ];
         nosnacks = with pkgs.vimPlugins; [
         ];
+        rust = with pkgs.vimPlugins; [
+          rustaceanvim
+        ];
         general = with pkgs.vimPlugins; {
           always = [
             lze
@@ -127,8 +139,7 @@
             rainbow-delimiters-nvim
           ];
         };
-        # You can retreive information from the
-        # packageDefinitions of the package this was packaged with.
+        # Retrieve category used as a setting from current packageDefinitions
         # :help nixCats.flake.outputs.categoryDefinitions.scheme
         themer = with pkgs.vimPlugins;
           (builtins.getAttr (categories.colorscheme or "onedark") {
@@ -170,7 +181,9 @@
           # This is how you enable plugins added as flake inputs
           pkgs.neovimPlugins.wezterm-types
         ];
-
+        typescript = with pkgs.vimPlugins; [
+          typescript-tools-nvim
+        ];
         mini = with pkgs.vimPlugins; [
           mini-nvim
         ];
@@ -285,9 +298,11 @@
       mini = true;
       nomini = true;
 
-      # enabling this category will enable the go category,
-      # and ALSO debug.go and debug.default due to our extraCats in categoryDefinitions.
-      # go = true; # <- disabled but you could enable it with override or module on install
+      # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
+      # go = true;
+      # rust = true;
+      # zig = true;
+      # typescript = true;
 
       # Categories don't *have* to have plugins to be used:
       lspDebugMode = false;

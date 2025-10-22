@@ -1,5 +1,5 @@
 local catUtils = require("nixCatsUtils")
-if (catUtils.isNixCats and nixCats("lspDebugMode")) then
+if catUtils.enableForCategory("lspDebugMode", false) then
   vim.lsp.set_log_level("debug")
 end
 
@@ -101,7 +101,7 @@ require("lze").load {
   },
   {
     "bash-language-server",
-    enabled = nixCats("bash") or false,
+    enabled = catUtils.enableForCategory("bash", false),
     lsp = {
       -- if you provide the filetypes it doesn't ask lspconfig for the filetypes
       filetypes = { "bash", "sh", "zsh" },
@@ -112,6 +112,34 @@ require("lze").load {
     for_cat = "go",
     -- if you don't provide the filetypes it asks lspconfig for them
     lsp = {},
+  },
+  -- NOTE: handled by rustaceanvim
+  -- {
+  --   "rust-analyzer",
+  --   for_cat = "rust",
+  --   lsp = {},
+  -- },
+  {
+    "zls",
+    for_cat = "zig",
+    lsp = {},
+  },
+  {
+    "typescript-tools.nvim",
+    for_cat = "typescript",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "neovim/nvim-lspconfig",
+    },
+    ft = { "javascriptreact", "typescriptreact", "javascript", "typescript" },
+    after = function (_)
+      require("typescript-tools").setup {
+        expose_as_code_action = "all",
+        jsx_close_tag = {
+          enable = true
+        },
+      }
+    end,
   },
   {
     "rnix",
@@ -127,7 +155,7 @@ require("lze").load {
   },
   {
     "nixd",
-    enabled = catUtils.isNixCats and nixCats or false,
+    enabled = catUtils.enableForCategory("neonixdev", false),
     lsp = {
       settings = {
         nixd = {

@@ -1,3 +1,5 @@
+# TODO: karabiner-elements, rust, go, zig, typescript
+# TODO: migrate brewfiles
 {
   description = "Starter Configuration for MacOS and NixOS";
 
