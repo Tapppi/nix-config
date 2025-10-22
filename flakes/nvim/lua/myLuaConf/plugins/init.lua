@@ -68,7 +68,7 @@ require("lze").load {
   },
   {
     "nvim-surround",
-    for_cat = "general.always",
+    for_cat = "nomini",
     event = "DeferredUIEnter",
     after = function()
       require("nvim-surround").setup()
