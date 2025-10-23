@@ -26,4 +26,7 @@ end
 if nixCats("lint") then
   require("myLuaConf.lint")
 end
-require("myLuaConf.format")
+if nixCats("format") then
+  require("myLuaConf.format")
+end
+

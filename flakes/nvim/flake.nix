@@ -56,7 +56,7 @@
       # Will be available to PATH within neovim terminal
       lspsAndRuntimeDeps = {
         # TODO: web vscode json etc. lang servers, typescript tools, eslint
-        # TODO: conform, i.e. prettier, shfmt, stylua etc.
+        # TODO: formatting with conform: i.e. prettier, shfmt etc.
         general = with pkgs; [
           universal-ctags
           ripgrep
@@ -170,6 +170,9 @@
           ];
           go = [ nvim-dap-go ];
         };
+        format = with pkgs.vimPlugins; [
+          conform-nvim
+        ];
         lint = with pkgs.vimPlugins; [
           nvim-lint
         ];
@@ -288,6 +291,8 @@
     defaultCategories = {
       general = true;
       lint = true;
+      format = true;
+      
       shell = true;
       markdown = true;
       lua = true;
