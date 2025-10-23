@@ -22,7 +22,7 @@ require("lze").load {
   { import = "myLuaConf.plugins.completion", },
   {
     "markdown-preview.nvim",
-    for_cat = "general.markdown",
+    for_cat = "markdown",
     cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle", },
     ft = "markdown",
     keys = {
