@@ -1,6 +1,10 @@
 
 -- General settings
-require("myLuaConf.opts_and_keys")
+require("myLuaConf.opts")
+
+-- Remaps
+require("myLuaConf.remap")
+Global_remaps()
 
 -- Extra lze handlers
 -- makes enabling an lze spec for a category slightly nicer
