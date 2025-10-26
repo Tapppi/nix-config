@@ -1,13 +1,13 @@
-require('lze').load {
+require("lze").load({
   {
     "conform.nvim",
     -- cmd = { "" },
     -- event = "",
     -- ft = "",
     keys = {
-      { "<leader>FF", desc = "[F]ormat [F]ile" },
+      { "<leader>ff", desc = "[F]ormat [F]ile" },
     },
-    after = function (plugin)
+    after = function(plugin)
       local conform = require("conform")
 
       conform.setup({
@@ -24,13 +24,19 @@ require('lze').load {
         },
       })
 
-      vim.keymap.set({ "n", "v" }, "<leader>FF", function()
+      -- Create a command `:Format` local to the LSP buffer
+      vim.api.nvim_create_user_command("Format", function(_)
         conform.format({
-          lsp_fallback = true,
           async = false,
-          timeout_ms = 1000,
+          timeout_ms = 3000,
         })
-      end, { desc = "[F]ormat [F]ile" })
+      end, { desc = "Format current buffer with Conform" })
+      vim.keymap.set({ "n", "v" }, "<leader>ff", function()
+        conform.format({
+          async = false,
+          timeout_ms = 3000,
+        })
+      end, { desc = "[F]ormat [F]ile with Conform" })
     end,
   },
-}
+})
