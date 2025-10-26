@@ -13,10 +13,18 @@ function Global_remaps()
 
   vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
+  -- Create a command `:BufOnly` for deleting all but the current buffer
+  vim.api.nvim_create_user_command(
+    "BufOnly",
+    '%bd|e#|bd#|norm `"',
+    { desc = "Close all other buffers" }
+  )
+
   vim.keymap.set("n", "<leader><leader>[", "<cmd>bprev<CR>", { desc = "Previous buffer" })
   vim.keymap.set("n", "<leader><leader>]", "<cmd>bnext<CR>", { desc = "Next buffer" })
   vim.keymap.set("n", "<leader><leader>l", "<cmd>b#<CR>", { desc = "Last buffer" })
   vim.keymap.set("n", "<leader><leader>d", "<cmd>bdelete<CR>", { desc = "delete buffer" })
+  vim.keymap.set("n", "<leader><leader>o", "<cmd>BufOnly<CR>", { desc = "Close all other buffers" })
 
   -- Remap for dealing with word wrap
   vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
