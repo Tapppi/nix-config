@@ -112,7 +112,7 @@ return {
               min_width = 15,
               max_height = 20,
               max_width = 65,
-              winblend = 25,
+              winblend = 15,
             }
           },
         },

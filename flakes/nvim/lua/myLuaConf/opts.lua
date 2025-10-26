@@ -31,7 +31,7 @@ vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Set window borders and transparency
-vim.opt.winblend = 10
+vim.opt.winblend = 5
 vim.opt.winborder = 'rounded'
 
 -- Set highlight on search (see remap.lua for ESC to :nohlsearch bind)
