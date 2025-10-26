@@ -201,7 +201,8 @@
         ];
         general = {
           blink = with pkgs.vimPlugins; [
-            # TODO: snippets setup, blink, keybinds etc.
+            ## TODO: snippets setup, blink, keybinds etc.
+            ## TODO: snippet fix: https://github.com/BirdeeHub/nixCats-nvim/commit/c6000fb730d4067e3e1d65e9d5a2cbcd1ceaef83
             luasnip
             cmp-cmdline
             blink-cmp
@@ -292,7 +293,7 @@
       general = true;
       lint = true;
       format = true;
-      
+
       shell = true;
       markdown = true;
       lua = true;
