@@ -227,13 +227,13 @@
             gitsigns-nvim
             vim-fugitive
             vim-rhubarb
+            which-key-nvim
+            undotree
           ];
           extra = with pkgs.vimPlugins; [
             fidget-nvim
-            which-key-nvim
             comment-nvim
             nvim-ts-context-commentstring
-            undotree
             vim-startuptime
           ];
         };

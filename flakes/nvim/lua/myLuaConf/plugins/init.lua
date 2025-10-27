@@ -36,7 +36,7 @@ require("lze").load {
   },
   {
     "undotree",
-    for_cat = "general.extra",
+    for_cat = "general.always",
     cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo", },
     keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" }, },
     before = function()
@@ -210,7 +210,7 @@ require("lze").load {
   },
   {
     "which-key.nvim",
-    for_cat = "general.extra",
+    for_cat = "general.always",
     -- cmd = { "" },
     event = "DeferredUIEnter",
     -- ft = "",
