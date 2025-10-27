@@ -2,11 +2,11 @@
   "nodes": {
     "nixCats": {
       "locked": {
-        "lastModified": 1745981575,
-        "narHash": "sha256-Q9PevfxZeO47fBd5ptGA4f+xJ8iC8jF/hsEVhRIOofo=",
+        "lastModified": 1759730664,
+        "narHash": "sha256-boRlBQ/c4CaHsK/z04QL6+t81mcar37Io94HBX2GflY=",
         "owner": "BirdeeHub",
         "repo": "nixCats-nvim",
-        "rev": "4cdecb9f07973fc0fe2d069d153bc9344db36791",
+        "rev": "77dffad8235eb77684fcb7599487c8e9f23d5b8f",
         "type": "github"
       },
       "original": {
@@ -17,11 +17,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1748662220,
-        "narHash": "sha256-7gGa49iB9nCnFk4h/g9zwjlQAyjtpgcFkODjcOQS0Es=",
+        "lastModified": 1761349956,
+        "narHash": "sha256-tH3wHnOJms+U4k/rK2Nn1RfBrhffX92jLP/2VndSn0w=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "59138c7667b7970d205d6a05a8bfa2d78caa3643",
+        "rev": "02f2cb8e0feb4596d20cc52fda73ccee960e3538",
         "type": "github"
       },
       "original": {
@@ -34,11 +34,11 @@
     "plugins-wezterm-types": {
       "flake": false,
       "locked": {
-        "lastModified": 1745147304,
-        "narHash": "sha256-MDzEJY9ughs2rSGAw/WQOqNDeUb3ostFiXOZ5HmkGVM=",
+        "lastModified": 1750319838,
+        "narHash": "sha256-Pa0luCHxYTRlpMeUaZS9jkhqcpHupBNE3yD8oJKiYLU=",
         "owner": "gonstoll",
         "repo": "wezterm-types",
-        "rev": "3d59d9ed537ec4b935be3d48e06689ed02adace7",
+        "rev": "bba4eacfdce545a9d5c29c69d20bbb9c90189224",
         "type": "github"
       },
       "original": {
