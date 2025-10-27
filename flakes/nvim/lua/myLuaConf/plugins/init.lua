@@ -8,7 +8,15 @@ if ok then
   vim.notify = notify
   vim.keymap.set("n", "<Esc>", function()
       notify.dismiss({ silent = true, })
-  end, { desc = "dismiss notify popup and clear hlsearch" })
+      vim.cmd({ cmd = "nohlsearch", silent = true})
+  end, { desc = "Dismiss notify popup and clear search highligh", silent = true })
+else
+  vim.keymap.set(
+    "n",
+    "<Esc>",
+    "<cmd>nohlsearch<CR>",
+    { desc = "Clear search highlight", silent = true}
+  )
 end
 
 require("lze").load {

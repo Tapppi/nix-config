@@ -11,8 +11,6 @@ function Global_remaps()
   vim.keymap.set("n", "n", "nzzzv", { desc = "Next Search Result" })
   vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous Search Result" })
 
-  vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
-
   -- Create a command `:BufOnly` for deleting all but the current buffer
   vim.api.nvim_create_user_command(
     "BufOnly",
