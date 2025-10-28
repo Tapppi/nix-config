@@ -302,7 +302,7 @@
       snacks = false;
       nosnacks = true;
       mini = true;
-      nomini = true;
+      nomini = false;
 
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;

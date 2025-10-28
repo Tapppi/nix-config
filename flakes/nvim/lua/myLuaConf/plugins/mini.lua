@@ -2,7 +2,7 @@
 -- a coherent set of that work well together. It's from echasnovski, and together
 -- with snacks is a good base without using a distro.
 
--- See the nomini category in flake.nvim for everything mini replaces in my config.
+-- See the nomini category in flake.nix and in configs for everything mini replaces in my config.
 
 return {
   {
