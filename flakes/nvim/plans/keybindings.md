@@ -397,7 +397,7 @@ end
   })
 
   -- Conditional line movement (only if mini not enabled)
-  if not catUtils.enableForCategory("mini", true) and catUtils.enableForCategory("nomini", true) then
+  if not catUtils.enableForCategory("mini", true) and catUtils.enableForCategory("nomini", false) then
     wk.add({
       { "J", desc = "Moves Line Down", mode = "v" },
       { "K", desc = "Moves Line Up", mode = "v" },
@@ -444,7 +444,7 @@ end
 5. **Add documentation for plugin-configured keymaps**:
 ```lua
   -- Document Oil keymaps (configured in oil setup, documented here)
-  if catUtils.enableForCategory("general.extra", true) then
+  if catUtils.enableForCategory("general.always", true) then
     wk.add({
       { "-", desc = "Open Parent Directory" },
       { "<leader>-", desc = "Open nvim root directory" },
@@ -468,7 +468,7 @@ end
   end
 
   -- Document Telescope (when nosnacks is enabled)
-  if catUtils.enableForCategory("nosnacks", true) and not catUtils.enableForCategory("snacks", true) then
+  if catUtils.enableForCategory("nosnacks", true) and not catUtils.enableForCategory("snacks", false) then
     wk.add({
       { "<leader>sM", desc = "[S]earch [M]essage" },
       { "<leader>sp", desc = "[S]earch git [P]roject root" },

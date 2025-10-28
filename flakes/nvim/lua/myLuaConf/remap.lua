@@ -12,11 +12,7 @@ function Global_remaps()
   vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous Search Result" })
 
   -- Create a command `:BufOnly` for deleting all but the current buffer
-  vim.api.nvim_create_user_command(
-    "BufOnly",
-    '%bd|e#|bd#|norm `"',
-    { desc = "Close all other buffers" }
-  )
+  vim.api.nvim_create_user_command("BufOnly", '%bd|e#|bd#|norm `"', { desc = "Close all other buffers" })
 
   vim.keymap.set("n", "<leader><leader>[", "<cmd>bprev<CR>", { desc = "Previous buffer" })
   vim.keymap.set("n", "<leader><leader>]", "<cmd>bnext<CR>", { desc = "Next buffer" })
@@ -29,30 +25,15 @@ function Global_remaps()
   vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
   -- Diagnostic keymaps
-  vim.keymap.set(
-    "n",
-    "[d",
-    vim.diagnostic.goto_prev,
-    { desc = "Go to previous diagnostic message" }
-  )
+  vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Go to previous diagnostic message" })
   vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Go to next diagnostic message" })
-  vim.keymap.set(
-    "n",
-    "<leader>e",
-    vim.diagnostic.open_float,
-    { desc = "Open floating diagnostic message" }
-  )
+  vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Open floating diagnostic message" })
   vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostics list" })
 
   -- Copy to/from clipboard
   -- In order to not clobber system-wide clipboard, easy-to-use keymaps instead of
   -- vim.o.clipboard = 'unnamedplus'
-  vim.keymap.set(
-    { "v", "x", "n" },
-    "<leader>y",
-    '"+y',
-    { noremap = true, silent = true, desc = "Yank to clipboard" }
-  )
+  vim.keymap.set({ "v", "x", "n" }, "<leader>y", '"+y', { noremap = true, silent = true, desc = "Yank to clipboard" })
   vim.keymap.set(
     { "n", "v", "x" },
     "<leader>Y",
@@ -78,18 +59,11 @@ function Global_remaps()
     silent = true,
     desc = "Paste over selection without erasing unnamed register",
   })
-  vim.keymap.set(
-    { "n", "v", "x" },
-    "<leader><C-a>",
-    "gg0vG$",
-    { noremap = true, silent = true, desc = "Select all" }
-  )
+  vim.keymap.set({ "n", "v", "x" }, "<leader><C-a>", "gg0vG$", { noremap = true, silent = true, desc = "Select all" })
 
   -- Move lines
   -- This is replaced by mini.move
-  if
-    not catUtils.enableForCategory("mini", false) and catUtils.enableForCategory("nomini", true)
-  then
+  if not catUtils.enableForCategory("mini", true) and catUtils.enableForCategory("nomini", false) then
     vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "Moves Line Down" })
     vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "Moves Line Up" })
   end
