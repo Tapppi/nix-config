@@ -317,41 +317,36 @@
     };
 
     # see :help nixCats.flake.outputs.packageDefinitions
-    # Now build a package with specific categories from above marked as true to include them.
-    # This entire set is also passed to nixCats for querying within the lua.
-    # It is directly translated to a Lua table, and a get function is defined.
+    # The entire set is directly translated to a Lua table for querying, and a get function is defined.
     packageDefinitions = {
-      # the name here is the name of the package
-      # and also the default command name for it.
-      nvim = { pkgs, name, ... }@misc: {
-        # these also recieve our pkgs variable
-        # see :help nixCats.flake.outputs.packageDefinitions
+      # The name here is the name of the package and the default command name for it.
+      nvim = { ... }: {
+      # nvim = { pkgs, name, ... }@misc: {
         settings = {
+          # :help nixCats.flake.outputs.settings for all of the settings available
           suffix-path = true;
           suffix-LD = true;
-          # WARNING: MAKE SURE THESE DONT CONFLICT WITH OTHER INSTALLED PACKAGES ON YOUR PATH
-          # That would result in a failed build, as nixos and home manager modules validate for collisions on your path
+          # WARNING: Make sure these dont conflict with other installed packages on your path, or the build will fail
           aliases = [ "vim" "vi" ];
 
-          # :help nixCats.flake.outputs.settings for all of the settings available
           wrapRc = true;
-          # will look for this name within .config and .local and others, controls which pkgs share
-          # this can be changed so that you can choose which ones share data folders for auths
+          # Name for searching .config and .local and so on, i.e. controls sharing between packages for auth etc.
           # :h $NVIM_APPNAME
           configDirName = "nvim";
           # neovim-unwrapped = inputs.neovim-nightly-overlay.packages.${pkgs.system}.neovim;
-          hosts.python3.enable = true;
-          hosts.node.enable = true;
+          # hosts.python3.enable = true;
+          # hosts.node.enable = true;
         };
         # enable the categories you want from categoryDefinitions
         categories = defaultCategories // {};
         extra = {
-          # to keep the categories table from being filled with non category things that you want to pass
-          # there is also an extra table you can use to pass extra stuff.
-          # but you can pass all the same stuff in any of these sets and access it in lua
+          # Add extra configuration here to not bloat categories, available to lua the exact same way
+          # nixCats.extra("path.to.val") will perform vim.tbl_get(nixCats.extra, "path" "to" "val")
+          # The main nixCats("path.to.cat") will report true if `path.to = true` even though path.to.cat would be
+          # an indexing error in that case. This is useful for subcategories, but bad for fetching values.
           nixdExtras = {
-            nixpkgs = ''import ${pkgs.path} {}'';
-            # or inherit nixpkgs;
+            inherit nixpkgs;
+            # or nixpkgs = ''import ${pkgs.path} {}'';
           };
         };
       };
@@ -359,45 +354,32 @@
         settings = {
           suffix-path = true;
           suffix-LD = true;
-          # IMPURE PACKAGE: normal config reload from stdpath('config') := ~/.config/testNvim
-          # Includes same categories as default package in order to test configs for the main package
+          # IMPURE PACKAGE: normal config reload from unwrappedCfgPath
           wrapRc = false;
-          # or tell it some other place to load
-          # unwrappedCfgPath = "/Users/tapani/project/github/tapppi/nix-config/flakes/nvim";
+          # Or unset unwrappedCfgPath to use `stdpath('config') := ~/.config/testNvim` and symlink there
+          unwrappedCfgPath = "~/project/github/tapppi/nix-config/flakes/nvim";
 
           configDirName = "testNvim";
-
-          aliases = [ "testCat" "tvi" ];
         };
+        # Includes same categories as default package in order to test configs for the main package
         categories = defaultCategories // {};
         extra = {
-          # nixCats.extra("path.to.val") will perform vim.tbl_get(nixCats.extra, "path" "to" "val")
-          # this is different from the main nixCats("path.to.cat") in that
-          # the main nixCats("path.to.cat") will report true if `path.to = true`
-          # even though path.to.cat would be an indexing error in that case.
-          # this is to mimic the concept of "subcategories" but may get in the way of just fetching values.
           nixdExtras = {
-            nixpkgs = ''import ${pkgs.path} {}'';
-            # or inherit nixpkgs;
+            inherit nixpkgs;
           };
         };
       };
     };
 
-    defaultPackageName = "nvim";
-    # I did not here, but you might want to create a package named nvim.
-
-    # defaultPackageName is also passed to utils.mkNixosModules and utils.mkHomeModules
-    # and it controls the name of the top level option set.
-    # If you made a package named `nixCats` your default package as we did here,
-    # the modules generated would be set at:
+    # defaultPackageName controls the the top level option passed to utils.mkNixosModules and utils.mkHomeModules
+    # In addition, every package exports its own module via overrideable passhtru so you can yourpackage.homeModule
+    # If you made a package named `nixCats` your default package, you could configure the modules like:
     # config.nixCats = {
     #   enable = true;
     #   packageNames = [ "nixCats" ]; # <- the packages you want installed
     #   <see :h nixCats.module for options>
     # }
-    # In addition, every package exports its own module via passthru, and is overrideable.
-    # so you can yourpackage.homeModule and then the namespace would be that packages name.
+    defaultPackageName = "nvim";
   in
   # you shouldnt need to change much past here, but you can if you wish.
   # but you should at least eventually try to figure out whats going on here!
