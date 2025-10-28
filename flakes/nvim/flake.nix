@@ -106,6 +106,7 @@
         neonixdev = with pkgs; [
           nix-doc
           nixd
+          nixfmt-rfc-style
         ];
       };
 
