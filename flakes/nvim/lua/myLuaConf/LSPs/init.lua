@@ -53,7 +53,7 @@ require("lze").load {
     end,
   },
   {
-    -- lazydev makes your lsp way better in your config without needing extra lsp configuration.
+    -- lazydev makes your neovim config lsp better without extra lsp configuration.
     "lazydev.nvim",
     for_cat = "neonixdev",
     cmd = { "LazyDev" },
