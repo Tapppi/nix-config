@@ -83,7 +83,7 @@ vim.opt.completeopt = 'menu,preview,noselect'
 
 -- [[ Disable auto comment on enter ]]
 -- See :help formatoptions
-local filetype_fo_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
+local filetype_fo_group = vim.api.nvim_create_augroup('FileTypeFormatOptions', { clear = true })
 vim.api.nvim_create_autocmd("FileType", {
   desc = "remove formatoptions",
   callback = function()
