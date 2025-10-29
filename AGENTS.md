@@ -110,6 +110,10 @@ max_line_length = 120
 
 ## Common Tasks
 
+### Making file changes
+
+When making file changes, do NOT create backup files, we use git for that purpose.
+
 ### Building Configurations
 
 ```bash
