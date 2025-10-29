@@ -2,10 +2,6 @@
 -- General settings
 require("myLuaConf.opts")
 
--- Remaps
-require("myLuaConf.remap")
-Global_remaps()
-
 -- Extra lze handlers
 -- makes enabling an lze spec for a category slightly nicer
 require("lze").register_handlers(require("nixCatsUtils.lzUtils").for_cat)
@@ -15,9 +11,9 @@ require("lze").register_handlers(require("lzextras").lsp)
 -- Theming
 require("myLuaConf.theme")
 
--- Plugins
+-- Plugins (includes remap setup via which-key)
 require("myLuaConf.plugins")
-require("myLuaConf.LSPs")
+require("myLuaConf.lsp")
 
 -- Debugging, linting, formatting
 if nixCats("debug") then

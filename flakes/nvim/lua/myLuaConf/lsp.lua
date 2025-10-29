@@ -1,4 +1,6 @@
 local catUtils = require("nixCatsUtils")
+local remap = require("myLuaConf.remap")
+
 if catUtils.enableForCategory("lspDebugMode", false) then
   vim.lsp.set_log_level("debug")
 end
@@ -21,6 +23,7 @@ require("lze").h.lsp.set_ft_fallback(function(name)
     return old_ft_fallback(name)
   end
 end)
+
 require("lze").load {
   {
     "nvim-lspconfig",
@@ -35,7 +38,7 @@ require("lze").load {
     end,
     before = function(_)
       vim.lsp.config("*", {
-        on_attach = require("myLuaConf.LSPs.on_attach"),
+        on_attach = remap.setup_lsp_keymaps,
       })
     end,
   },

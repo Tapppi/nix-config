@@ -1,3 +1,5 @@
+local remap = require("myLuaConf.remap")
+
 local load_w_after = function(name)
   vim.cmd.packadd(name)
   vim.cmd.packadd(name .. '/after')
@@ -20,17 +22,11 @@ return {
     for_cat = "general.blink",
     dep_of = { "blink.cmp" },
     after = function(_)
-      local luasnip = require 'luasnip'
+      local ls = require 'luasnip'
       require('luasnip.loaders.from_vscode').lazy_load()
-      luasnip.config.setup {}
+      ls.config.setup {}
 
-      local ls = require('luasnip')
-
-      vim.keymap.set({ "i", "s" }, "<M-n>", function()
-        if ls.choice_active() then
-          ls.change_choice(1)
-        end
-      end)
+      remap.setup_luasnip_keymaps(ls)
     end,
   },
   {

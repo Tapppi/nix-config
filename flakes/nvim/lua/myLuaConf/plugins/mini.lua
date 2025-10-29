@@ -4,6 +4,8 @@
 
 -- See the nomini category in flake.nix and in configs for everything mini replaces in my config.
 
+local remap = require("myLuaConf.remap")
+
 return {
   {
     "mini.nvim",
@@ -12,21 +14,9 @@ return {
     after = function()
       require("mini.surround").setup()
       require("mini.pairs").setup()
-      require("mini.move").setup(
-        {
-          mappings = {
-            left = "H",
-            right = "L",
-            down = "J",
-            up = "K",
-
-            line_left = "<M-h>",
-            line_right = "<M-l>",
-            line_up = "<M-j>",
-            line_down = "<M-k>",
-          }
-        }
-      )
+      require("mini.move").setup({
+        mappings = remap.get_mini_move_mappings(),
+      })
     end
   },
 }
