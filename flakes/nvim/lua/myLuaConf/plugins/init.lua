@@ -48,9 +48,10 @@ require("lze").load {
     cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo", },
     keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" }, },
     before = function()
-      vim.g.undotree_WindowLayout = 1
+      vim.g.undotree_WindowLayout = 2
       vim.g.undotree_SplitWidth = 40
       vim.g.undotree_SetFocusWhenToggle = 1
+      vim.g.undotree_DisabledFiletypes = { 'TelescopePrompt' }
     end,
   },
   {
