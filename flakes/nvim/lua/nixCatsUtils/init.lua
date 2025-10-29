@@ -1,22 +1,5 @@
---[[
-  This directory is the luaUtils template.
-  You can choose what things from it that you would like to use.
-  And then delete the rest.
-  Everything in this directory is optional.
---]]
-
+-- Mock nixCats plugin when nixCats wasnt used to load the config and utilities for working with nixCats.
 local M = {}
-
---[[
-  This file is for making your config still work WITHOUT nixCats.
-  When you don't use nixCats to load your config,
-  you wont have the nixCats plugin.
-
-  The setup function defined here defines a mock nixCats plugin when nixCats wasnt used to load the config.
-  This will help avoid indexing errors when the nixCats plugin doesnt exist.
-
-  NOTE: If you only ever use nixCats to load your config, you don't need this file.
---]]
 
 ---@type boolean
 M.isNixCats = vim.g[ [[nixCats-special-rtp-entry-nixCats]] ] ~= nil
@@ -25,7 +8,6 @@ M.isNixCats = vim.g[ [[nixCats-special-rtp-entry-nixCats]] ] ~= nil
 ---@field non_nix_value boolean|nil
 
 ---This function will setup a mock nixCats plugin when not using nix
----It will help prevent you from running into indexing errors without a nixCats plugin from nix.
 ---If you loaded the config via nix, it does nothing
 ---non_nix_value defaults to true if not provided or is not a boolean.
 ---@param v nixCatsSetupOpts
@@ -51,20 +33,22 @@ function M.setup(v)
             print("function requires a table of strings or a dot separated string")
             return
           end
-          return vim.tbl_get(tbl, unpack(strtable));
-        end
+          return vim.tbl_get(tbl, unpack(strtable))
+        end,
       })
     end
     ---@diagnostic disable-next-line: duplicate-set-field
-    package.preload['nixCats'] = function()
+    package.preload["nixCats"] = function()
       local ncsub = {
-        get = function(_) return nixCats_default_value end,
+        get = function(_)
+          return nixCats_default_value
+        end,
         cats = mk_with_meta({
-          nixCats_config_location = vim.fn.stdpath('config'),
+          nixCats_config_location = vim.fn.stdpath("config"),
           wrapRc = false,
         }),
         settings = mk_with_meta({
-          nixCats_config_location = vim.fn.stdpath('config'),
+          nixCats_config_location = vim.fn.stdpath("config"),
           configDirName = os.getenv("NVIM_APPNAME") or "nvim",
           wrapRc = false,
         }),
@@ -76,12 +60,16 @@ function M.setup(v)
             opt = {},
           },
         }),
-        configDir = vim.fn.stdpath('config'),
-        packageBinPath = os.getenv('NVIM_WRAPPER_PATH_NIX') or vim.v.progpath
+        configDir = vim.fn.stdpath("config"),
+        packageBinPath = os.getenv("NVIM_WRAPPER_PATH_NIX") or vim.v.progpath,
       }
-      return setmetatable(ncsub, { __call = function(_, cat) return ncsub.get(cat) end })
+      return setmetatable(ncsub, {
+        __call = function(_, cat)
+          return ncsub.get(cat)
+        end,
+      })
     end
-    _G.nixCats = require('nixCats')
+    _G.nixCats = require("nixCats")
   end
 end
 
@@ -114,12 +102,12 @@ function M.getCatOrDefault(v, default)
   end
 end
 
----for conditionally disabling build steps on nix, as they are done via nix
----I should probably have named it dontAddIfCats or something.
+---Only return if not installed with nixCats,
+---for conditionally disabling build steps on nix
 ---@overload fun(v: any): any|nil
 ---Will return the second value if nix, otherwise the first
 ---@overload fun(v: any, o: any): any
-function M.lazyAdd(v, o)
+function M.ifNotCats(v, o)
   if M.isNixCats then
     return o
   else

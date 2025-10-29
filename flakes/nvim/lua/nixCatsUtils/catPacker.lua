@@ -1,10 +1,3 @@
---[[
-  This directory is the luaUtils template.
-  You can choose what things from it that you would like to use.
-  And then delete the rest.
-  Everything in this directory is optional.
---]]
-
 local M = {}
 -- NOTE: This function is for defining a paq.nvim fallback method of downloading plugins
 -- when nixCats was not used to install your config.
