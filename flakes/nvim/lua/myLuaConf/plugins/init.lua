@@ -7,36 +7,66 @@ if ok then
   })
   vim.notify = notify
   vim.keymap.set("n", "<Esc>", function()
-      notify.dismiss({ silent = true, })
-      vim.cmd({ cmd = "nohlsearch", silent = true})
+    notify.dismiss({ silent = true })
+    vim.cmd("nohlsearch")
   end, { desc = "Dismiss notify popup and clear search highligh", silent = true })
 else
-  vim.keymap.set(
-    "n",
-    "<Esc>",
-    "<cmd>nohlsearch<CR>",
-    { desc = "Clear search highlight", silent = true}
-  )
+  vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight", silent = true })
 end
 
-require("lze").load {
+require("lze").load({
   -- non-lazy
-  { import = "myLuaConf.plugins.snacks", },
-  { import = "myLuaConf.plugins.oil", },
+  { import = "myLuaConf.plugins.oil" },
+  {
+    "which-key.nvim",
+    for_cat = "general.always",
+    -- event = "DeferredUIEnter",
+    lazy = false,
+    after = function()
+      require("which-key").setup({})
+      require("which-key").add({
+        { "<leader><leader>", group = "buffer commands" },
+        { "<leader><leader>_", hidden = true },
+        { "<leader>c", group = "[c]ode" },
+        { "<leader>c_", hidden = true },
+        { "<leader>d", group = "[d]ocument" },
+        { "<leader>d_", hidden = true },
+        { "<leader>g", group = "[g]it" },
+        { "<leader>g_", hidden = true },
+        { "<leader>m", group = "[m]arkdown" },
+        { "<leader>m_", hidden = true },
+        { "<leader>r", group = "[r]ename" },
+        { "<leader>r_", hidden = true },
+        { "<leader>s", group = "[s]earch" },
+        { "<leader>s_", hidden = true },
+        { "<leader>t", group = "[t]oggles" },
+        { "<leader>t_", hidden = true },
+        { "<leader>w", group = "[w]orkspace" },
+        { "<leader>w_", hidden = true },
+      })
+    end,
+  },
+  { import = "myLuaConf.plugins.snacks" },
   -- lazy
-  { import = "myLuaConf.plugins.mini", },
-  { import = "myLuaConf.plugins.telescope", },
-  { import = "myLuaConf.plugins.treesitter", },
-  { import = "myLuaConf.plugins.completion", },
+  { import = "myLuaConf.plugins.mini" },
+  { import = "myLuaConf.plugins.telescope" },
+  { import = "myLuaConf.plugins.treesitter" },
+  { import = "myLuaConf.plugins.completion" },
   {
     "markdown-preview.nvim",
     for_cat = "markdown",
-    cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle", },
+    cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle" },
     ft = "markdown",
     keys = {
-      {"<leader>mp", "<cmd>MarkdownPreview <CR>", mode = {"n"}, noremap = true, desc = "markdown preview"},
-      {"<leader>ms", "<cmd>MarkdownPreviewStop <CR>", mode = {"n"}, noremap = true, desc = "markdown preview stop"},
-      {"<leader>mt", "<cmd>MarkdownPreviewToggle <CR>", mode = {"n"}, noremap = true, desc = "markdown preview toggle"},
+      { "<leader>mp", "<cmd>MarkdownPreview <CR>", mode = { "n" }, noremap = true, desc = "markdown preview" },
+      { "<leader>ms", "<cmd>MarkdownPreviewStop <CR>", mode = { "n" }, noremap = true, desc = "markdown preview stop" },
+      {
+        "<leader>mt",
+        "<cmd>MarkdownPreviewToggle <CR>",
+        mode = { "n" },
+        noremap = true,
+        desc = "markdown preview toggle",
+      },
     },
     before = function()
       vim.g.mkdp_auto_close = 0
@@ -45,13 +75,13 @@ require("lze").load {
   {
     "undotree",
     for_cat = "general.always",
-    cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo", },
-    keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" }, },
+    cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo" },
+    keys = { { "<leader>u", "<cmd>UndotreeToggle<CR>", mode = { "n" }, desc = "[U]ndo Tree" } },
     before = function()
       vim.g.undotree_WindowLayout = 2
       vim.g.undotree_SplitWidth = 40
       vim.g.undotree_SetFocusWhenToggle = 1
-      vim.g.undotree_DisabledFiletypes = { 'TelescopePrompt' }
+      vim.g.undotree_DisabledFiletypes = { "TelescopePrompt" }
     end,
   },
   {
@@ -117,22 +147,26 @@ require("lze").load {
         sections = {
           lualine_c = {
             {
-              "filename", path = 1, status = true,
+              "filename",
+              path = 1,
+              status = true,
             },
           },
         },
         inactive_sections = {
           lualine_b = {
             {
-              "filename", path = 3, status = true,
+              "filename",
+              path = 3,
+              status = true,
             },
           },
-          lualine_x = {"filetype"},
+          lualine_x = { "filetype" },
         },
         tabline = {
           lualine_a = { "buffers" },
-          lualine_b = { "lsp_progress", },
-          lualine_z = { "tabs" }
+          lualine_b = { "lsp_progress" },
+          lualine_z = { "tabs" },
         },
       })
     end,
@@ -184,10 +218,10 @@ require("lze").load {
           -- Actions
           -- visual mode
           map("v", "<leader>gs", function()
-            gs.stage_hunk { vim.fn.line ".", vim.fn.line "v" }
+            gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
           end, { desc = "stage git hunk" })
           map("v", "<leader>gr", function()
-            gs.reset_hunk { vim.fn.line ".", vim.fn.line "v" }
+            gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
           end, { desc = "reset git hunk" })
           -- normal mode
           map("n", "<leader>gs", gs.stage_hunk, { desc = "git stage hunk" })
@@ -197,11 +231,11 @@ require("lze").load {
           map("n", "<leader>gR", gs.reset_buffer, { desc = "git Reset buffer" })
           map("n", "<leader>gp", gs.preview_hunk, { desc = "preview git hunk" })
           map("n", "<leader>gb", function()
-            gs.blame_line { full = false }
+            gs.blame_line({ full = false })
           end, { desc = "git blame line" })
           map("n", "<leader>gd", gs.diffthis, { desc = "git diff against index" })
           map("n", "<leader>gD", function()
-            gs.diffthis "~"
+            gs.diffthis("~")
           end, { desc = "git diff against last commit" })
 
           -- Toggles
@@ -217,37 +251,4 @@ require("lze").load {
       vim.cmd([[hi GitSignsDelete guifg=#fa2525]])
     end,
   },
-  {
-    "which-key.nvim",
-    for_cat = "general.always",
-    -- cmd = { "" },
-    event = "DeferredUIEnter",
-    -- ft = "",
-    -- keys = "",
-    -- colorscheme = "",
-    after = function()
-      require("which-key").setup({
-      })
-      require("which-key").add {
-        { "<leader><leader>", group = "buffer commands" },
-        { "<leader><leader>_", hidden = true },
-        { "<leader>c", group = "[c]ode" },
-        { "<leader>c_", hidden = true },
-        { "<leader>d", group = "[d]ocument" },
-        { "<leader>d_", hidden = true },
-        { "<leader>g", group = "[g]it" },
-        { "<leader>g_", hidden = true },
-        { "<leader>m", group = "[m]arkdown" },
-        { "<leader>m_", hidden = true },
-        { "<leader>r", group = "[r]ename" },
-        { "<leader>r_", hidden = true },
-        { "<leader>s", group = "[s]earch" },
-        { "<leader>s_", hidden = true },
-        { "<leader>t", group = "[t]oggles" },
-        { "<leader>t_", hidden = true },
-        { "<leader>w", group = "[w]orkspace" },
-        { "<leader>w_", hidden = true },
-      }
-    end,
-  },
-}
+})
