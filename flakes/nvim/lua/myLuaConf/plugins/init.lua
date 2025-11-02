@@ -24,10 +24,8 @@ require("lze").load({
     lazy = false,
     after = function()
       require("which-key").setup({})
-      -- Setup global remaps first
-      remap.setup_global_remaps()
       -- Then document groups and abnormal keymaps with which-key
-      remap.setup_which_key_groups()
+      remap.setup_which_key()
     end,
   },
   { import = "myLuaConf.plugins.snacks" },

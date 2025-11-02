@@ -89,10 +89,10 @@ function M.setup_esc_keymap(notify_dismiss_fn)
 end
 
 -- ============================================================================
--- Which-Key Setup for groups
+-- Which-Key Setup
 -- ============================================================================
 
-function M.setup_which_key_groups()
+function M.setup_which_key()
   local wk = require("which-key")
 
   wk.add({

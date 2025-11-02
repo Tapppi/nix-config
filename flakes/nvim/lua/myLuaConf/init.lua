@@ -1,6 +1,8 @@
-
 -- General settings
 require("myLuaConf.opts")
+
+-- Setup global remaps first
+require("myLuaConf").setup_global_remaps()
 
 -- Extra lze handlers
 -- makes enabling an lze spec for a category slightly nicer
@@ -25,4 +27,3 @@ end
 if nixCats("format") then
   require("myLuaConf.format")
 end
-
