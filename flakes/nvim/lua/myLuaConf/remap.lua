@@ -117,6 +117,12 @@ function M.setup_which_key_groups()
     { "<leader>w", group = "[w]orkspace" },
     { "<leader>w_", hidden = true },
   })
+
+  -- Hide file explorer keymaps in which-key, as they should be muscle memory, see `oil_lze_keys`
+  wk.add({
+    { "-", mode = "n", hidden = true },
+    { "<leader>-", mode = "n", hidden = true },
+  })
 end
 
 -- ============================================================================
@@ -383,8 +389,8 @@ end
 -- Oil lze keys (for lazy loading)
 function M.oil_lze_keys()
   return {
-    { "-", "<cmd>Oil<CR>", mode = "n", hidden = true, desc = "Open Parent Directory" },
-    { "<leader>-", "<cmd>Oil .<CR>", mode = "n", hidden = true, desc = "Open nvim root directory" },
+    { "-", "<cmd>Oil<CR>", mode = "n", desc = "Open Parent Directory" },
+    { "<leader>-", "<cmd>Oil .<CR>", mode = "n", desc = "Open nvim root directory" },
   }
 end
 
