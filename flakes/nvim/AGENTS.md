@@ -16,7 +16,11 @@ The Neovim configuration is built with:
 
 ### Directory Structure
 
-```
+```txt
+# git repo root
+.editorconfig           # EditorConfig for formatting
+stylua.toml             # Lua formatting config
+AGENTS.md
 flakes/nvim/
 ├── flake.nix           # nixCats configuration
 ├── init.lua            # Entry point
@@ -24,14 +28,12 @@ flakes/nvim/
 │   ├── myLuaConf/      # Main configuration
 │   │   ├── init.lua    # Config loader
 │   │   ├── opts.lua    # Neovim options
-│   │   ├── remap.lua   # Key mappings
+│   │   ├── keymap.lua  # Key mappings
 │   │   ├── theme.lua   # Color scheme
 │   │   ├── format.lua  # Formatting (conform.nvim)
 │   │   ├── lint.lua    # Linting (nvim-lint)
 │   │   ├── debug.lua   # DAP configuration
-│   │   ├── LSPs/       # LSP configurations
-│   │   │   ├── init.lua      # LSP setup
-│   │   │   └── on_attach.lua # LSP keybindings
+│   │   ├── lsp.lua     # LSP setup (lsp lze specs, lspconfig, fallback util)
 │   │   └── plugins/    # Plugin configurations
 │   │       ├── init.lua        # Plugin loader
 │   │       ├── completion.lua  # Example: Blink.cmp config
@@ -39,7 +41,6 @@ flakes/nvim/
 │   │       └── ...
 │   └── nixCatsUtils/   # nixCats utilities
 ├── plans/              # AI agent workspace for planning
-├── stylua.toml         # Lua formatting config
 └── README.md
 ```
 
@@ -399,7 +400,7 @@ Use `:LspInfo` to check which LSPs are configured, and whether there are any err
 2. **Add to category**: Place in appropriate category in flake.nix
 3. **Create spec**: Write lze spec with appropriate triggers and options
 4. **Load in plugins/init.lua**: Import the new plugin file if one was created
-5. **Document keybindings**: All keybindings must be set in `lua/myLuaConf/remap.lua`
+5. **Document keybindings**: All keybindings must be set in `lua/myLuaConf/keymap.lua`
 
 See the [Plugin Management section](#plugin-management) for details.
 
