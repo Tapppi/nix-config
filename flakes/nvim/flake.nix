@@ -68,7 +68,6 @@
           ];
           markdown = [
             markdownlint-cli2
-            vale
           ];
           shell = [
             shellcheck

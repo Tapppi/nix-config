@@ -8,7 +8,7 @@ require('lze').load {
         gitcommit = { 'gitlint' },
         bash = { 'shellcheck' },
         zsh = { 'zsh', 'shellcheck' },
-        markdown = { 'vale', 'markdownlint-cli2' },
+        markdown = { 'markdownlint-cli2' },
         go = { 'golangci-lint' },
         -- javascript = { 'eslint' },
         -- typescript = { 'eslint' },
