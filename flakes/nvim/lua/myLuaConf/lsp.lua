@@ -93,7 +93,7 @@ require("lze").load {
           },
           signatureHelp = { enabled = true },
           diagnostics = {
-            globals = { "nixCats", "vim", },
+            globals = {},
             disable = { "missing-fields" },
           },
           telemetry = { enabled = false },
