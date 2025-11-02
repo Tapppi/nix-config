@@ -1,4 +1,4 @@
--- General settings
+-- Vim settings
 require("myLuaConf.opts")
 
 -- Setup global keymaps first
@@ -10,10 +10,8 @@ require("lze").register_handlers(require("nixCatsUtils.lzUtils").for_cat)
 -- setup lsps within lze specs, and trigger only on correct filetypes
 require("lze").register_handlers(require("lzextras").lsp)
 
--- Theming
 require("myLuaConf.theme")
 
--- Plugins (includes remap setup via which-key)
 require("myLuaConf.plugins")
 require("myLuaConf.lsp")
 

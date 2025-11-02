@@ -8,8 +8,6 @@ vim.opt.termguicolors = true
 -- [[ Setting options ]]
 -- See `:help vim.o`
 
--- Sets how neovim will display certain whitespace characters in the editor.
-
 -- Save undo history
 vim.opt.swapfile = false
 vim.opt.backup = false
@@ -26,7 +24,7 @@ vim.opt.updatetime = 200
 -- Wait for mappings for 300ms after last keypress
 vim.opt.timeoutlen = 300
 
--- Show tabs and trailing spaces with glyphs, see `:help 'list'`
+-- Show tabs and trailing spaces with glyphs, see `:help 'list'` `:help 'listchars'`
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
