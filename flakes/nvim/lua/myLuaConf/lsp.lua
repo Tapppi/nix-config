@@ -1,5 +1,5 @@
 local catUtils = require("nixCatsUtils")
-local remap = require("myLuaConf.keymap")
+local keymap = require("myLuaConf.keymap")
 
 if catUtils.enableForCategory("lspDebugMode", false) then
   vim.lsp.set_log_level("debug")
@@ -38,7 +38,7 @@ require("lze").load {
     end,
     before = function(_)
       vim.lsp.config("*", {
-        on_attach = remap.setup_lsp_keymaps,
+        on_attach = keymap.setup_lsp_keymaps,
       })
     end,
   },

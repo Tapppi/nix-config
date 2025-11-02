@@ -1,7 +1,7 @@
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 
-local remap = require("myLuaConf.keymap")
+local keymap = require("myLuaConf.keymap")
 
 return {
   {
@@ -19,7 +19,7 @@ return {
     after = function (plugin)
       -- [[ Configure Treesitter ]]
       -- See `:help nvim-treesitter`
-      local treesitter_keymaps = remap.get_treesitter_keymaps()
+      local treesitter_keymaps = keymap.get_treesitter_keymaps()
       require('nvim-treesitter.configs').setup {
         highlight = {
           enable = true,

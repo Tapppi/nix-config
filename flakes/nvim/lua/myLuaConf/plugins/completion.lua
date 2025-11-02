@@ -1,4 +1,4 @@
-local remap = require("myLuaConf.keymap")
+local keymap = require("myLuaConf.keymap")
 
 local load_w_after = function(name)
   vim.cmd.packadd(name)
@@ -26,7 +26,7 @@ return {
       require('luasnip.loaders.from_vscode').lazy_load()
       ls.config.setup {}
 
-      remap.setup_luasnip_keymaps(ls)
+      keymap.setup_luasnip_keymaps(ls)
     end,
   },
   {

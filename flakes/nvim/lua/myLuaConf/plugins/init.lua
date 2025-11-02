@@ -1,5 +1,4 @@
--- Load remap module early
-local remap = require("myLuaConf.keymap")
+local keymap = require("myLuaConf.keymap")
 
 local ok, notify = pcall(require, "notify")
 if ok then
@@ -9,9 +8,9 @@ if ok then
     end,
   })
   vim.notify = notify
-  remap.setup_esc_keymap(notify.dismiss)
+  keymap.setup_esc_keymap(notify.dismiss)
 else
-  remap.setup_esc_keymap()
+  keymap.setup_esc_keymap()
 end
 
 require("lze").load({
@@ -25,7 +24,7 @@ require("lze").load({
     after = function()
       require("which-key").setup({})
       -- Then document groups and abnormal keymaps with which-key
-      remap.setup_which_key()
+      keymap.setup_which_key()
     end,
   },
   { import = "myLuaConf.plugins.snacks" },
@@ -39,7 +38,7 @@ require("lze").load({
     for_cat = "markdown",
     cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle" },
     ft = "markdown",
-    keys = remap.markdown_lze_keys(),
+    keys = keymap.markdown_lze_keys(),
     before = function()
       vim.g.mkdp_auto_close = 0
     end,
@@ -48,7 +47,7 @@ require("lze").load({
     "undotree",
     for_cat = "general.always",
     cmd = { "UndotreeToggle", "UndotreeHide", "UndotreeShow", "UndotreeFocus", "UndotreePersistUndo" },
-    keys = remap.undotree_lze_keys(),
+    keys = keymap.undotree_lze_keys(),
     before = function()
       vim.g.undotree_WindowLayout = 2
       vim.g.undotree_SplitWidth = 40
@@ -158,7 +157,7 @@ require("lze").load({
           changedelete = { text = "~" },
         },
         on_attach = function(bufnr)
-          remap.setup_gitsigns_keymaps(bufnr)
+          keymap.setup_gitsigns_keymaps(bufnr)
         end,
       })
       vim.cmd([[hi GitSignsAdd guifg=#04de21]])

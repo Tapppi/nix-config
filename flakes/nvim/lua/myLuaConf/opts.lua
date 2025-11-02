@@ -32,7 +32,7 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 vim.opt.winblend = 5
 vim.opt.winborder = 'rounded'
 
--- Set highlight on search (see remap.lua for ESC to :nohlsearch bind)
+-- Set highlight on search (see keymap.lua for ESC to :nohlsearch bind)
 vim.opt.hlsearch = true
 
 -- Preview substitutions live, as you type!

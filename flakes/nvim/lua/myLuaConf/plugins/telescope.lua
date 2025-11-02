@@ -20,7 +20,7 @@
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
 
-local remap = require("myLuaConf.keymap")
+local keymap = require("myLuaConf.keymap")
 local helpers = require("myLuaConf.helpers")
 
 return {
@@ -32,7 +32,7 @@ return {
     -- NOTE: our on attach function defines keybinds that call telescope.
     -- so, the on_require handler will load telescope when we use those.
     on_require = { "telescope", },
-    keys = remap.telescope_lze_keys(),
+    keys = keymap.telescope_lze_keys(),
     load = function(name)
       vim.cmd.packadd(name)
       vim.cmd.packadd("telescope-fzf-native.nvim")
