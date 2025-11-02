@@ -1,7 +1,7 @@
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 return {
   {

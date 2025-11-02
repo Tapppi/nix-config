@@ -1,7 +1,7 @@
 -- Oil.nvim is a buffer-based file explorer for Neovim.
 -- It's more "vimmy" than netrw.
 
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 return {
   {

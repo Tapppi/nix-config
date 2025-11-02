@@ -1,8 +1,8 @@
 -- General settings
 require("myLuaConf.opts")
 
--- Setup global remaps first
-require("myLuaConf").setup_global_remaps()
+-- Setup global keymaps first
+require("myLuaConf.keymap").setup_global_keymaps()
 
 -- Extra lze handlers
 -- makes enabling an lze spec for a category slightly nicer

@@ -1,5 +1,5 @@
 -- Load remap module early
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 local ok, notify = pcall(require, "notify")
 if ok then

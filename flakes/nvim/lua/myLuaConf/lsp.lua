@@ -1,5 +1,5 @@
 local catUtils = require("nixCatsUtils")
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 if catUtils.enableForCategory("lspDebugMode", false) then
   vim.lsp.set_log_level("debug")

@@ -1,4 +1,4 @@
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 local load_w_after = function(name)
   vim.cmd.packadd(name)

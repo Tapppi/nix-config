@@ -5,10 +5,10 @@ local catUtils = require("nixCatsUtils")
 local helpers = require("myLuaConf.helpers")
 
 -- ============================================================================
--- Global Remaps
+-- Global keymaps
 -- ============================================================================
 
-function M.setup_global_remaps()
+function M.setup_global_keymaps()
   vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll Down" })
   vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll Up" })
   vim.keymap.set("n", "n", "nzzzv", { desc = "Next Search Result" })

@@ -4,7 +4,7 @@
 
 -- See the nomini category in flake.nix and in configs for everything mini replaces in my config.
 
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 
 return {
   {

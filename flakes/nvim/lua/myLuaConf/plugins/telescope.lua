@@ -20,7 +20,7 @@
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
 
-local remap = require("myLuaConf.remap")
+local remap = require("myLuaConf.keymap")
 local helpers = require("myLuaConf.helpers")
 
 return {
