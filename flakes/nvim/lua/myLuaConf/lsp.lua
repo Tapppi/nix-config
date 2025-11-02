@@ -194,4 +194,13 @@ require("lze").load {
       },
     },
   },
+  {
+    "gleam",
+    for_cat = "gleam",
+    lsp = {
+      -- Official Gleam LSP is built into the gleam binary
+      -- Run with: gleam lsp
+      -- filetypes will be auto-detected as { "gleam" }
+    },
+  },
 }

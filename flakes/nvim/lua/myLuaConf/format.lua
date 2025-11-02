@@ -33,6 +33,7 @@ require("lze").load({
           -- NOTE: download some formatters in lspsAndRuntimeDeps
           -- and configure them here
           lua = { "stylua" },
+          gleam = { "gleam" },
           markdown = function(bufnr)
             return { first(bufnr, "prettierd", "prettier"), "injected" }
           end,

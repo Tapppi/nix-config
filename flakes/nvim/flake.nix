@@ -109,6 +109,9 @@
           nixd
           nixfmt-rfc-style
         ];
+        gleam = with pkgs; [
+          gleam  # Compiler, CLI tools, formatter (gleam format), and LSP (gleam lsp)
+        ];
       };
 
       # Plugins that will load at startup without using packadd:
@@ -300,6 +303,7 @@
       markdown = true;
       lua = true;
       neonixdev = true;
+      gleam = true;
 
       snacks = false;
       nosnacks = true;

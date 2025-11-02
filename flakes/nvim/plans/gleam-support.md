@@ -11,16 +11,15 @@ Add comprehensive Gleam language support to the Neovim configuration following t
 
 Based on nix search results, the following Gleam-related packages are available:
 
-1. **gleam** (1.13.0) - The Gleam compiler and CLI tools (includes built-in formatter)
-2. **glas** (0.2.3) - Language server for the Gleam programming language
-3. **tree-sitter-gleam** (0.25.10) - Treesitter grammar for Gleam
-4. **vimPlugins.gleam-vim** - Vim plugin for Gleam (may not be needed with treesitter)
-5. **vimPlugins.nvim-treesitter-parsers.gleam** - Treesitter parser
+1. **gleam** (1.13.0) - The Gleam compiler, CLI tools, formatter, and LSP server
+2. **tree-sitter-gleam** (0.25.10) - Treesitter grammar for Gleam
+3. **vimPlugins.gleam-vim** - Vim plugin for Gleam (may not be needed with treesitter)
+4. **vimPlugins.nvim-treesitter-parsers.gleam** - Treesitter parser
 
 ## Gleam Tooling Best Practices
 
-From Gleam documentation:
-- **LSP**: `glas` is the community-maintained language server
+From Gleam documentation (https://gleam.run/language-server):
+- **LSP**: The official Gleam Language Server is built into the `gleam` binary (run with `gleam lsp`)
 - **Formatting**: `gleam format` (built into the Gleam CLI) is the standard formatter
 - **Linting**: No dedicated linter; Gleam's compiler provides comprehensive diagnostics
 - **Syntax Highlighting**: Treesitter grammar available
@@ -37,8 +36,7 @@ From Gleam documentation:
 **lspsAndRuntimeDeps section** (around line 57):
 ```nix
 gleam = with pkgs; [
-  gleam  # Compiler, CLI tools, and formatter (gleam format)
-  glas   # Language server
+  gleam  # Compiler, CLI tools, formatter (gleam format), and LSP (gleam lsp)
 ];
 ```
 
@@ -79,10 +77,11 @@ defaultCategories = {
 
 ```lua
 {
-  "glas",
+  "gleam",
   for_cat = "gleam",
   lsp = {
-    -- glas uses default configuration
+    -- Official Gleam LSP is built into the gleam binary
+    -- Run with: gleam lsp
     -- filetypes will be auto-detected as { "gleam" }
   },
 },
@@ -90,7 +89,8 @@ defaultCategories = {
 
 **Rationale:** 
 - Uses `for_cat = "gleam"` to enable only when gleam category is active
-- Minimal configuration as glas works well with defaults
+- The official Gleam LSP is built into the gleam binary and runs via `gleam lsp`
+- Minimal configuration as the official LSP works well with defaults
 - LSP will auto-detect `.gleam` files
 
 ### 3. Add Formatter Configuration ✨ SIMPLIFIED
@@ -128,10 +128,10 @@ formatters_by_ft = {
 **Expected Change:** Add to the Mason installation list if the file manages LSP installations outside Nix:
 ```lua
 -- Somewhere in the Mason LSP list:
-"glas",  -- Gleam LSP
+"gleam",  -- Official Gleam LSP (included in gleam binary)
 ```
 
-**Note:** Mason should automatically install `glas` when requested by lspconfig outside of Nix environments.
+**Note:** Mason should automatically handle the Gleam LSP when requested by lspconfig outside of Nix environments.
 
 ### 5. No Linting Configuration Needed
 
@@ -196,13 +196,13 @@ pub fn main() {
    - Enable `gleam = true` in `defaultCategories`
 
 2. ✅ `/Users/tapani/project/github/tapppi/nix-config/flakes/nvim/lua/myLuaConf/lsp.lua`
-   - Add glas LSP configuration
+   - Add official Gleam LSP configuration (uses `gleam lsp` command)
 
 3. ✅ `/Users/tapani/project/github/tapppi/nix-config/flakes/nvim/lua/myLuaConf/format.lua`
    - Add gleam formatter to `formatters_by_ft` (built-in formatter, no custom config needed!)
 
 4. ⚠️  `/Users/tapani/project/github/tapppi/nix-config/flakes/nvim/lua/myLuaConf/non_nix_download.lua` (OPTIONAL)
-   - May need to add glas to Mason fallback if configured
+   - May need to add gleam to Mason fallback if configured
 
 5. ❌ No changes needed:
    - `lint.lua` - No Gleam linter available/needed
@@ -211,12 +211,12 @@ pub fn main() {
 
 ## Implementation Checklist
 
-- [ ] Add `gleam` to `lspsAndRuntimeDeps` in flake.nix
-- [ ] Enable `gleam = true` in `defaultCategories` in flake.nix
-- [ ] Add glas LSP spec to lsp.lua
-- [ ] Add gleam to format.lua `formatters_by_ft` (uses built-in conform.nvim formatter)
+- [x] Add `gleam` to `lspsAndRuntimeDeps` in flake.nix (only gleam binary needed, no glas)
+- [x] Enable `gleam = true` in `defaultCategories` in flake.nix
+- [x] Add official Gleam LSP spec to lsp.lua (uses `gleam lsp`)
+- [x] Add gleam to format.lua `formatters_by_ft` (uses built-in conform.nvim formatter)
 - [ ] Check and update non_nix_download.lua if needed
-- [ ] Run `nix flake check`
+- [x] Run `nix flake check`
 - [ ] Build testNvim
 - [ ] Test with sample Gleam code
 - [ ] Verify LSP, formatting, and syntax highlighting work
@@ -225,12 +225,12 @@ pub fn main() {
 
 - **Zero configuration philosophy**: Gleam tooling is intentionally minimal and opinionated. No custom configuration should be needed beyond basic setup.
 - **No plugin needed**: Unlike some languages, Gleam doesn't require a dedicated vim plugin since treesitter handles syntax and LSP handles intelligence.
-- **Formatter is built-in**: The `gleam format` command is part of the main Gleam CLI, not a separate tool.
-- **Community LSP**: `glas` is maintained by the community, not the Gleam team, but it's the standard LSP server for Gleam.
+- **All-in-one binary**: The `gleam` binary includes the compiler, formatter (`gleam format`), and LSP server (`gleam lsp`).
+- **Official LSP**: The Gleam Language Server is an official part of the Gleam project, built into the main binary.
 
 ## References
 
 - [Gleam Official Website](https://gleam.run/)
-- [glas LSP Server](https://github.com/gleam-lang/glas)
+- [Gleam Language Server Documentation](https://gleam.run/language-server)
 - [Gleam Format Documentation](https://gleam.run/writing-gleam/command-line-reference/#format)
 - [nixpkgs Gleam package](https://search.nixos.org/packages?query=gleam)
