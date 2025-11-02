@@ -12,7 +12,7 @@ The Neovim configuration is built with:
 - **lze**: Lazy loading plugin manager
 - **lzextras**: Additional lze utilities
 - **No lazy.nvim**: Uses native Neovim loading via lze
-- **No mason.nvim when using Nix**: All LSPs/tools via Nix packages. Mason is ONLY used when running outside Nix.
+- **No mason.nvim when using Nix**: All LSPs and tools via Nix packages. Mason is ONLY used when running outside Nix.
 
 ### Directory Structure
 
@@ -100,6 +100,7 @@ the `packageDefinitions` section. The `defaultCategories` attribute defines whic
 and individual packages (like `nvim`) can override these with their own `categories` attribute.
 
 Example from flake.nix:
+
 ```nix
 packageDefinitions = {
   nvim = { pkgs, ... }: {
@@ -115,6 +116,7 @@ packageDefinitions = {
 ```
 
 Common category types:
+
 - **Language support**: Categories like `lua`, `go`, `rust`, `typescript`, etc.
 - **Feature categories**: `lint`, `format`, `debug`
 - **Core categories**: `general` (always enabled), `neonixdev` (Nix development), `mini` (improved editor functionality)
@@ -149,12 +151,14 @@ Packages, i.e. nvim executables with separate configs are configured in `flake.n
 In `flake.nix` in the `categoryDefinitions` there are two configurations for plugins per category:
 
 **startupPlugins** load immediately via Neovim's packpath:
+
 - Core dependencies required by multiple plugins (e.g. plenary, lze, notify)
 - Essential utilities (vim-repeat, vim-sleuth)
 - Theme plugins
 - File explorer, i.e. Oil.nvim (loaded through lze, but non-lazily)
 
 **optionalPlugins** are loaded lazily via lze specs, includes everything else including:
+
 - LSP and completion configurations (e.g. nvim-lspconfig)
 - Language-specific tooling
 - Feature plugins with clear trigger points (commands, keys, events)
@@ -204,7 +208,7 @@ optionalPlugins = {
 
 ```lua
 -- lua/myLuaConf/plugins/newplugin.lua
-require("lze").load {
+require("lze").load({
   {
     "new-plugin",
     for_cat = "general", -- Enable for category or use `enabled = <any lua>` for more complex configurations
@@ -218,7 +222,7 @@ require("lze").load {
       })
     end,
   },
-}
+})
 ```
 
 3. Load in `lua/myLuaConf/plugins/init.lua` if config was added to a new file
@@ -231,35 +235,35 @@ lze supports multiple loading triggers, use triggers applicable to the typical
 way the plugin is used:
 
 ```lua
-require("lze").load {
+require("lze").load({
   {
     "plugin-name",
     -- Options to enable plugin:
-    for_cat = "category",                                  -- If category enabled, shortcut
-    enabled = catUtils.enableForCategory("category", true) -- Allows more complex logic for enabling
+    for_cat = "category", -- If category enabled, shortcut
+    enabled = catUtils.enableForCategory("category", true), -- Allows more complex logic for enabling
 
     -- Trigger options:
-    cmd = { "CommandName" },              -- On command
-    event = "BufReadPre",                 -- On event
-    ft = "lua",                           -- On filetype
-    keys = { "<leader>x" },               -- On keymap
+    cmd = { "CommandName" }, -- On command
+    event = "BufReadPre", -- On event
+    ft = "lua", -- On filetype
+    keys = { "<leader>x" }, -- On keymap
 
     -- Setup options:
-    before = function(plugin) end,        -- Before loading
-    after = function(plugin) end,         -- After loading
-    load = function(name) end,            -- Custom load function
+    before = function(plugin) end, -- Before loading
+    after = function(plugin) end, -- After loading
+    load = function(name) end, -- Custom load function
   },
-}
+})
 ```
 
 ## LSP Configuration
 
 ### LSP Setup Pattern
 
-LSPs are configured in `lua/myLuaConf/LSPs/init.lua` using lzextras.lsp handler:
+LSPs are configured in `lua/myLuaConf/lsp.lua` using lzextras.lsp handler:
 
 ```lua
-require("lze").load {
+require("lze").load({
   {
     "nvim-lspconfig",
     for_cat = "general.always",
@@ -275,19 +279,20 @@ require("lze").load {
     "lua_ls",
     enabled = nixCats("lua") or nixCats("neonixdev") or false,
     lsp = {
-      settings = { /* ... */ },
+      settings = {
+        --[[ ... ]]
+      },
     },
   },
   -- More LSP configs...
-}
+})
 ```
 
-### Available LSPs
+### Configured LSPs
 
-LSPs are configured in `lua/myLuaConf/LSPs/init.lua`. Check the file for current LSP support. Common patterns:
+LSPs are configured in `lua/myLuaConf/lsp.lua`. Check the file for current LSP support. Common patterns:
 
 - Language-specific LSPs are gated by their category (typically with e.g. `for_cat = "go"` in lze spec)
-- To see which LSPs are available in your build, use `:LspInfo` in Neovim
 
 ### Adding New LSP
 
@@ -309,20 +314,24 @@ categories = defaultCategories // {
 };
 ```
 
-3. Add LSP spec to `lua/myLuaConf/LSPs/init.lua`:
+3. Add LSP spec to `lua/myLuaConf/lsp.lua`:
 
 ```lua
-{
-  "mylang-language-server",
-  for_cat = "mylang",
-  lsp = {
-    -- optional: override filetypes
-    -- filetypes = { "mylang" },
-    settings = {
-      -- LSP-specific settings
+require("lze").load({
+  -- nvim-lspconfig and other LSPs...
+  {
+    "mylang-language-server",
+    for_cat = "mylang",
+    lsp = {
+      -- optional: override filetypes
+      -- filetypes = { "mylang" },
+      settings = {
+        -- LSP-specific settings
+      },
     },
   },
-},
+  -- More LSP configs...
+})
 ```
 
 ## Completion System
@@ -333,9 +342,21 @@ Uses **blink.cmp** and **luasnip**, configured in `lua/myLuaConf/plugins/complet
 
 Configured in `lua/myLuaConf/lint.lua` when `lint` category is enabled. Dependencies added in `lspsAndRuntimeDeps`.
 
+### Adding new linters
+
+1. Add the required packages and configurations in `flake.nix`
+2. Check in nvim-lint docs for how to configure the formatter or adapt if not found
+3. Add the configurations to `lua/myLuaConf/lint.lua`
+
 ## Formatting (conform.nvim)
 
 Configured in `lua/myLuaConf/format.lua` when `format` category is enabled. Dependencies added in `lspsAndRuntimeDeps`.
+
+### Configuring new formatters
+
+1. Add the required packages and configurations in `flake.nix`
+2. Check in conform.nvim readme docs whether there is a supported configuration for the formatter
+3. Add to the `lua/myLuaConf/format.lua` config
 
 ## Debugging (DAP, nvim-dap)
 
@@ -407,7 +428,7 @@ See the [Plugin Management section](#plugin-management) for details.
 ### When Configuring LSPs
 
 1. **Add LSP package**: Include in lspsAndRuntimeDeps in `flake.nix`
-2. **Create spec**: Add to `lua/myLuaConf/LSPs/init.lua` with proper category
+2. **Create spec**: Add to `lua/myLuaConf/lsp.lua` with proper category
 3. **Test filetypes**: Verify LSP loads on correct filetypes
 4. **Use on_attach**: Leverage common on_attach for consistency
 5. **Enable category**: Update defaultCategories if needed
@@ -465,7 +486,9 @@ end
 
 -- Get plugin path
 local lspconfig_path = nixCats.pawsible({
-  "allPlugins", "opt", "nvim-lspconfig"
+  "allPlugins",
+  "opt",
+  "nvim-lspconfig",
 })
 ```
 
@@ -492,4 +515,3 @@ nix flake lock --update-input nixCats
 - [lze Plugin Manager](https://github.com/BirdeeHub/lze)
 - [lzextras Utilities](https://github.com/BirdeeHub/lzextras)
 - [Neovim LSP Configuration](https://neovim.io/doc/user/lsp.html)
-
