@@ -80,8 +80,10 @@
         debug = with pkgs; {
           go = [ delve ];
         };
+        markdown = with pkgs; [ prettierd ];
         rust = with pkgs; [
           rust-analyzer
+          rustfmt
         ];
         zig = with pkgs; [
           zls

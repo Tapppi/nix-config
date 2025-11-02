@@ -123,6 +123,17 @@ require("lze").load({
               status = true,
             },
           },
+          lualine_x = {
+            "encoding",
+            "fileformat",
+            "filetype",
+            {
+              require("myLuaConf.helpers").conform_status,
+              cond = function()
+                return package.loaded["conform"] ~= nil
+              end,
+            },
+          },
         },
         inactive_sections = {
           lualine_b = {

@@ -33,10 +33,25 @@ end
 function M.telescope_live_grep_git_root()
   local git_root = M.find_git_root()
   if git_root then
-    require('telescope.builtin').live_grep({
+    require("telescope.builtin").live_grep({
       search_dirs = { git_root },
     })
   end
+end
+
+-- ============================================================================
+-- Conform Helpers
+-- ============================================================================
+
+function M.conform_status()
+  local formatters, use_lsp = require("conform").list_formatters_to_run()
+  local names = vim.tbl_map(function(formatter)
+    return formatter.name
+  end, formatters)
+  if use_lsp then
+    table.insert(names, "LSP")
+  end
+  return "[" .. table.concat(names, ", ") .. "]"
 end
 
 return M
