@@ -11,7 +11,8 @@ vim.opt.termguicolors = true
 -- Save undo history
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+local data_dir = os.getenv("XDG_DATA_HOME") or (os.getenv("HOME") .. "/.local/share")
+vim.opt.undodir = data_dir .. "/nvim/undodir"
 vim.opt.undofile = true
 
 -- Case-insensitive searching UNLESS \C or capital in search, ignores *,#,gd
