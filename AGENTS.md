@@ -96,7 +96,7 @@ max_line_length = 120
 ### Specific File Type Conventions
 
 - **Nix**: Formatted with nixfmt, follows editorconfig rules
-- **Lua**: Formatted with StyLua which is configured to match editorconfig, except no final newline
+- **Lua**: Formatted with StyLua which is configured to match editorconfig
 - **Shell scripts**: Follow bash best practices, 2-space indentation
 - **Markdown**: Formatted with markdownlint-cli2, follows editorconfig rules
 

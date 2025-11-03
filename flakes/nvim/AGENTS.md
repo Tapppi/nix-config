@@ -54,9 +54,8 @@ architectural decisions. Files in this directory are not part of the runtime con
 
 ### Lua Formatting with StyLua
 
-All Lua code is formatted with StyLua, see `stylua.toml` in repo root (not in `flakes/nvim`).
-StyLua is configured to match the root `.editorconfig` rules except for the final newline insertion, which it
-doesn't support.
+All Lua code is formatted with StyLua, see `stylua.toml` in repo root (not in `flakes/nvim`). StyLua is configured to
+match the root `.editorconfig` rules.
 
 ### Lua Conventions
 
