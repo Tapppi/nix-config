@@ -414,6 +414,40 @@ function M.undotree_lze_keys()
   }
 end
 
+-- Conform lze keys (for lazy loading)
+function M.conform_lze_keys()
+  return {
+    { "<leader>ff", "<cmd>Format<cr>", desc = "[F]ormat [F]ile", mode = "n" },
+    { "<leader>f", "<cmd>Format<cr>", desc = "[F]ormat selection", mode = "v" },
+  }
+end
+
+-- DAP lze keys (for lazy loading)
+function M.dap_lze_keys()
+  return {
+    { "<F5>", desc = "Debug: Start/Continue" },
+    { "<F1>", desc = "Debug: Step Into" },
+    { "<F2>", desc = "Debug: Step Over" },
+    { "<F3>", desc = "Debug: Step Out" },
+    { "<leader>b", desc = "Debug: Toggle Breakpoint" },
+    { "<leader>B", desc = "Debug: Set Breakpoint" },
+    { "<F7>", desc = "Debug: See last session result." },
+  }
+end
+
+-- DAP keymaps setup
+function M.setup_dap_keymaps(dap, dapui)
+  vim.keymap.set("n", "<F5>", dap.continue, { desc = "Debug: Start/Continue" })
+  vim.keymap.set("n", "<F1>", dap.step_into, { desc = "Debug: Step Into" })
+  vim.keymap.set("n", "<F2>", dap.step_over, { desc = "Debug: Step Over" })
+  vim.keymap.set("n", "<F3>", dap.step_out, { desc = "Debug: Step Out" })
+  vim.keymap.set("n", "<leader>b", dap.toggle_breakpoint, { desc = "Debug: Toggle Breakpoint" })
+  vim.keymap.set("n", "<leader>B", function()
+    dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
+  end, { desc = "Debug: Set Breakpoint" })
+  vim.keymap.set("n", "<F7>", dapui.toggle, { desc = "Debug: See last session result." })
+end
+
 -- Returns treesitter keymaps config
 function M.get_treesitter_keymaps()
   return {

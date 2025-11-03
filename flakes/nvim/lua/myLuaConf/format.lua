@@ -12,14 +12,13 @@ local function first(bufnr, ...)
   return select(1, ...)
 end
 
+local keymap = require("myLuaConf.keymap")
+
 require("lze").load({
   {
     "conform.nvim",
     cmd = { "Format" },
-    keys = {
-      { "<leader>ff", "<cmd>Format<cr>", desc = "[F]ormat [F]ile", mode = "n" },
-      { "<leader>f", "<cmd>Format<cr>", desc = "[F]ormat selection", mode = "v" },
-    },
+    keys = keymap.conform_lze_keys(),
     after = function(_)
       local conform = require("conform")
 
