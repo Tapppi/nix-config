@@ -35,7 +35,7 @@ require("lze").load({
           lua = { "stylua" },
           gleam = { "gleam" },
           markdown = function(bufnr)
-            return { first(bufnr, "prettierd", "prettier"), "injected" }
+            return { "markdownlint-cli2", first(bufnr, "prettierd", "prettier"), "injected" }
           end,
           -- go = { "gofmt", "golint" },
           -- templ = { "templ" },
