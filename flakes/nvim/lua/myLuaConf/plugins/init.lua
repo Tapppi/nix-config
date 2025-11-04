@@ -176,4 +176,10 @@ require("lze").load({
       vim.cmd([[hi GitSignsDelete guifg=#fa2525]])
     end,
   },
+  {
+    "lazygit.nvim",
+    for_cat = "general.always",
+    cmd = { "LazyGit", "LazyGitConfig", "LazyGitCurrentFile", "LazyGitFilter", "LazyGitFilterCurrentFile" },
+    keys = keymap.lazygit_lze_keys(),
+  },
 })

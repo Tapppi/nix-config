@@ -414,6 +414,13 @@ function M.undotree_lze_keys()
   }
 end
 
+-- Lazygit lze keys (for lazy loading)
+function M.lazygit_lze_keys()
+  return {
+    { "<leader>gl", "<cmd>LazyGit<CR>", mode = "n", desc = "[G]it [L]azygit" },
+  }
+end
+
 -- Conform lze keys (for lazy loading)
 function M.conform_lze_keys()
   return {

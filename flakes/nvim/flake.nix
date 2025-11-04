@@ -60,6 +60,7 @@
           universal-ctags
           ripgrep
           fd
+          lazygit
         ];
         lint = with pkgs; {
           default = [
