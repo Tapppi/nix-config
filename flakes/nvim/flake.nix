@@ -82,6 +82,8 @@
         };
         format = with pkgs; {
           default = [
+            fixjson
+            yamlfix
             prettierd
           ];
           shell = [

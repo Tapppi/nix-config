@@ -57,13 +57,13 @@ require("lze").load({
             return { first(bufnr, "prettierd", "prettier") }
           end,
           json = function(bufnr)
-            return { first(bufnr, "prettierd", "prettier") }
+            return { "fixjson", first(bufnr, "prettierd", "prettier") }
           end,
           jsonc = function(bufnr)
-            return { first(bufnr, "prettierd", "prettier") }
+            return { "fixjson", first(bufnr, "prettierd", "prettier") }
           end,
           yaml = function(bufnr)
-            return { first(bufnr, "prettierd", "prettier") }
+            return { "yamlfix", first(bufnr, "prettierd", "prettier") }
           end,
           html = function(bufnr)
             return { first(bufnr, "prettierd", "prettier") }
