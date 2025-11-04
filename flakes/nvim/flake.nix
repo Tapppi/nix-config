@@ -94,7 +94,7 @@
             golangci-lint
           ];
           zig = [
-            zig
+            # zig
           ];
         };
         rust = with pkgs; [
@@ -341,7 +341,7 @@
       lua = true;
       neonixdev = true;
       gleam = true;
-      zig = true;
+      # zig = false;
 
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
