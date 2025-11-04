@@ -397,6 +397,9 @@
           # Or unset unwrappedCfgPath to use `stdpath('config') := ~/.config/testNvim` and symlink there
           unwrappedCfgPath = "~/project/github/tapppi/nix-config/flakes/nvim";
 
+          # Alias to tvim for ease of use
+          aliases = [ "tvi" ];
+
           configDirName = "testNvim";
         };
         # Includes same categories as default package in order to test configs for the main package
