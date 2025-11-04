@@ -87,6 +87,10 @@
           shell = [
             shfmt
           ];
+          go = [
+            gotools # includes goimports
+            golangci-lint
+          ];
         };
         rust = with pkgs; [
           rust-analyzer
@@ -308,6 +312,7 @@
         go = [
           [ "lint" "go" ]
           [ "debug" "go" ]
+          [ "format" "go" ]
         ];
       };
     };

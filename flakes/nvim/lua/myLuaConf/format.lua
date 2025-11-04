@@ -29,10 +29,11 @@ require("lze").load({
           async = false,
         },
         formatters_by_ft = {
-          -- NOTE: download some formatters in lspsAndRuntimeDeps
-          -- and configure them here
+          -- Add formatters in lspsAndRuntimeDeps and configure them here
           lua = { "stylua" },
           nix = { "nixfmt" },
+          -- Conform will run multiple formatters sequentially
+          go = { "goimports", "golangci-lint" },
           gleam = { "gleam" },
           rust = { "rustfmt" },
           sh = { "shfmt" },
@@ -75,10 +76,6 @@ require("lze").load({
           graphql = function(bufnr)
             return { first(bufnr, "prettierd", "prettier") }
           end,
-          -- go = { "gofmt", "goimports" },
-          -- templ = { "templ" },
-          -- Conform will run multiple formatters sequentially
-          -- python = { "isort", "black" },
         },
       })
 
