@@ -122,6 +122,12 @@ Common category types:
 
 To check available categories in your build, use `:lua print(vim.inspect(nixCats.cats))` in Neovim.
 
+### extraCats for propagating subcategories
+
+There are also `extraCats` config that enables e.g. `format.go` whenever `go` category is enabled. This is needed
+to propagate the lang specific categories to the `format`, `lint` and `debug` categories when they have runtime deps
+or plugins that need to be installed in those subcategories.
+
 ### Category Definitions
 
 See `flake.nix` for the full `categoryDefinitions`. The configurations within control what a category enables, example:
