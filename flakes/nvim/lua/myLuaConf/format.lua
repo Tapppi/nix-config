@@ -36,12 +36,44 @@ require("lze").load({
           markdown = function(bufnr)
             return { "markdownlint-cli2", first(bufnr, "prettierd", "prettier"), "injected" }
           end,
+          -- Prettier-supported languages
+          javascript = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          typescript = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          javascriptreact = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          typescriptreact = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          json = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          jsonc = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          yaml = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          html = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          css = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          scss = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
+          graphql = function(bufnr)
+            return { first(bufnr, "prettierd", "prettier") }
+          end,
           -- go = { "gofmt", "golint" },
           -- templ = { "templ" },
           -- Conform will run multiple formatters sequentially
           -- python = { "isort", "black" },
-          -- Use a sub-list to run only the first available formatter
-          -- javascript = { { "prettierd", "prettier" } },
         },
       })
 

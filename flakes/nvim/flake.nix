@@ -56,7 +56,6 @@
       # Will be available to PATH within neovim terminal
       lspsAndRuntimeDeps = {
         # TODO: web vscode json etc. lang servers, typescript tools, eslint
-        # TODO: formatting with conform: i.e. prettier, shfmt etc.
         general = with pkgs; [
           universal-ctags
           ripgrep
@@ -80,7 +79,9 @@
         debug = with pkgs; {
           go = [ delve ];
         };
-        markdown = with pkgs; [ prettierd ];
+        format = with pkgs; [
+          prettierd
+        ];
         rust = with pkgs; [
           rust-analyzer
           rustfmt
