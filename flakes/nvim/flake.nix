@@ -79,9 +79,14 @@
         debug = with pkgs; {
           go = [ delve ];
         };
-        format = with pkgs; [
-          prettierd
-        ];
+        format = with pkgs; {
+          default = [
+            prettierd
+          ];
+          shell = [
+            shfmt
+          ];
+        };
         rust = with pkgs; [
           rust-analyzer
           rustfmt
@@ -235,6 +240,7 @@
             vim-rhubarb
             which-key-nvim
             undotree
+            lazygit-nvim
           ];
           extra = with pkgs.vimPlugins; [
             fidget-nvim
@@ -285,10 +291,21 @@
         lint = [
           [ "lint" "default" ]
         ];
+        format = [
+          [ "format" "default" ]
+        ];
+        shell = [
+          [ "lint" "shell" ]
+          [ "format" "shell" ]
+        ];
+        markdown = [
+          [ "lint" "markdown" ]
+        ];
         neonixdev = [
           [ "lua" ]
         ];
         go = [
+          [ "lint" "go" ]
           [ "debug" "go" ]
         ];
       };

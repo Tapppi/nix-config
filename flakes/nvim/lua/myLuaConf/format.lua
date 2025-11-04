@@ -32,7 +32,12 @@ require("lze").load({
           -- NOTE: download some formatters in lspsAndRuntimeDeps
           -- and configure them here
           lua = { "stylua" },
+          nix = { "nixfmt" },
           gleam = { "gleam" },
+          rust = { "rustfmt" },
+          sh = { "shfmt" },
+          bash = { "shfmt" },
+          zsh = { "shfmt" },
           markdown = function(bufnr)
             return { "markdownlint-cli2", first(bufnr, "prettierd", "prettier"), "injected" }
           end,
@@ -70,7 +75,7 @@ require("lze").load({
           graphql = function(bufnr)
             return { first(bufnr, "prettierd", "prettier") }
           end,
-          -- go = { "gofmt", "golint" },
+          -- go = { "gofmt", "goimports" },
           -- templ = { "templ" },
           -- Conform will run multiple formatters sequentially
           -- python = { "isort", "black" },
