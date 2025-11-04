@@ -91,6 +91,9 @@
             gotools # includes goimports
             golangci-lint
           ];
+          zig = [
+            zig
+          ];
         };
         rust = with pkgs; [
           rust-analyzer
@@ -314,6 +317,9 @@
           [ "debug" "go" ]
           [ "format" "go" ]
         ];
+        zig = [
+          [ "format" "zig" ]
+        ];
       };
     };
 
@@ -323,21 +329,21 @@
       lint = true;
       format = true;
 
-      shell = true;
-      markdown = true;
-      lua = true;
-      neonixdev = true;
-      gleam = true;
-
       snacks = false;
       nosnacks = true;
       mini = true;
       nomini = false;
 
+      shell = true;
+      markdown = true;
+      lua = true;
+      neonixdev = true;
+      gleam = true;
+      zig = true;
+
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
       # rust = true;
-      # zig = true;
       # typescript = true;
 
       # Categories don't *have* to have plugins to be used:

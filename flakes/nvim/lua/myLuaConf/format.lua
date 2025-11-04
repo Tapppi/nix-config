@@ -39,6 +39,7 @@ require("lze").load({
           sh = { "shfmt" },
           bash = { "shfmt" },
           zsh = { "shfmt" },
+          zig = { "zigfmt" },
           markdown = function(bufnr)
             return { "markdownlint-cli2", first(bufnr, "prettierd", "prettier"), "injected" }
           end,
