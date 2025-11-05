@@ -389,14 +389,14 @@
           };
         };
       };
-      testNvim = { pkgs, ... }@misc: {
+      testNvim = { ... }: {
         settings = {
           suffix-path = true;
           suffix-LD = true;
           # IMPURE PACKAGE: normal config reload from unwrappedCfgPath
           wrapRc = false;
           # Or unset unwrappedCfgPath to use `stdpath('config') := ~/.config/testNvim` and symlink there
-          unwrappedCfgPath = "~/project/github/tapppi/nix-config/flakes/nvim";
+          unwrappedCfgPath = "/Users/tapani/project/github/tapppi/nix-config/flakes/nvim";
 
           # Alias to tvim for ease of use
           aliases = [ "tvi" ];
@@ -422,6 +422,7 @@
     #   <see :h nixCats.module for options>
     # }
     defaultPackageName = "nvim";
+    testPackageName = "testNvim";
   in
   # you shouldnt need to change much past here, but you can if you wish.
   # but you should at least eventually try to figure out whats going on here!
@@ -435,6 +436,7 @@
     } categoryDefinitions packageDefinitions;
     # call it with our defaultPackageName
     defaultPackage = nixCatsBuilder defaultPackageName;
+    testPackage = nixCatsBuilder testPackageName;
 
     # this pkgs variable is just for using utils such as pkgs.mkShell
     # within this outputs set.
@@ -456,6 +458,13 @@
       default = pkgs.mkShell {
         name = defaultPackageName;
         packages = [ defaultPackage ];
+        inputsFrom = [ ];
+        shellHook = ''
+        '';
+      };
+      test = pkgs.mkShell {
+        name = testPackage;
+        packages = [ testPackage ];
         inputsFrom = [ ];
         shellHook = ''
         '';
