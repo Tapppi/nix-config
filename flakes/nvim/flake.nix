@@ -94,7 +94,7 @@
             golangci-lint
           ];
           zig = [
-            # zig
+            zig
           ];
         };
         rust = with pkgs; [
@@ -328,8 +328,9 @@
     # We define default categories here, so we can use them for both default and test packages
     defaultCategories = {
       general = true;
-      lint = true;
-      format = true;
+      # debug = { default = true; };
+      lint = { default = true; };
+      format = { default = true; };
 
       snacks = false;
       nosnacks = true;
@@ -341,7 +342,7 @@
       lua = true;
       neonixdev = true;
       gleam = true;
-      # zig = false;
+      zig = false;
 
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
