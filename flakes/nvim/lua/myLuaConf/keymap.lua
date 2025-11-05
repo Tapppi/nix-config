@@ -181,6 +181,14 @@ function M.setup_lsp_keymaps(_, bufnr)
     vim.lsp.buf.format()
   end, { desc = "Format current buffer with LSP" })
   nmap("<leader>fF", vim.lsp.buf.format, "Format current buffer with LSP")
+
+  -- LSP selection range keymaps (visual mode)
+  vim.keymap.set("x", "s", function()
+    vim.lsp.buf.selection_range(1 * vim.v.count1)
+  end, { buffer = bufnr, desc = "LSP: Increase selection" })
+  vim.keymap.set("x", "S", function()
+    vim.lsp.buf.selection_range(-1 * vim.v.count1)
+  end, { buffer = bufnr, desc = "LSP: Decrease selection" })
 end
 
 -- ============================================================================
@@ -207,7 +215,7 @@ function M.setup_gitsigns_keymaps(bufnr)
   end
 
   -- Navigation
-  map({ "n", "v" }, "]c", function()
+  map({ "n", "v" }, "]g", function()
     if vim.wo.diff then
       return "]c"
     end
@@ -215,9 +223,9 @@ function M.setup_gitsigns_keymaps(bufnr)
       gs.next_hunk()
     end)
     return "<Ignore>"
-  end, { expr = true, desc = "Jump to next hunk" })
+  end, { expr = true, desc = "Jump to next git hunk" })
 
-  map({ "n", "v" }, "[c", function()
+  map({ "n", "v" }, "[g", function()
     if vim.wo.diff then
       return "[c"
     end
@@ -225,7 +233,7 @@ function M.setup_gitsigns_keymaps(bufnr)
       gs.prev_hunk()
     end)
     return "<Ignore>"
-  end, { expr = true, desc = "Jump to previous hunk" })
+  end, { expr = true, desc = "Jump to previous git hunk" })
 
   -- Actions
   -- visual mode
@@ -461,52 +469,64 @@ function M.get_treesitter_keymaps()
     incremental_selection = {
       enable = true,
       keymaps = {
-        init_selection = "<c-space>",
-        node_incremental = "<c-space>",
+        init_selection = "<c-a>",
+        node_incremental = "<c-a>",
         scope_incremental = "<c-s>",
-        node_decremental = "<M-space>",
+        node_decremental = "<M-a>",
       },
     },
     textobjects = {
-      select = {
-        enable = true,
-        lookahead = true,
-        keymaps = {
-          ["aa"] = "@parameter.outer",
-          ["ia"] = "@parameter.inner",
-          ["af"] = "@function.outer",
-          ["if"] = "@function.inner",
-          ["ac"] = "@class.outer",
-          ["ic"] = "@class.inner",
-        },
-      },
       move = {
         enable = true,
         set_jumps = true,
         goto_next_start = {
           ["]m"] = "@function.outer",
           ["]]"] = "@class.outer",
+          ["]c"] = "@comment.outer",
+          ["]a"] = "@parameter.outer",
+          ["]b"] = "@block.outer",
+          ["]i"] = "@conditional.outer",
+          ["]o"] = "@loop.outer",
+          ["]f"] = "@call.outer",
         },
         goto_next_end = {
           ["]M"] = "@function.outer",
           ["]["] = "@class.outer",
+          ["]C"] = "@comment.outer",
+          ["]A"] = "@parameter.outer",
+          ["]B"] = "@block.outer",
+          ["]I"] = "@conditional.outer",
+          ["]O"] = "@loop.outer",
+          ["]F"] = "@call.outer",
         },
         goto_previous_start = {
           ["[m"] = "@function.outer",
           ["[["] = "@class.outer",
+          ["[c"] = "@comment.outer",
+          ["[a"] = "@parameter.outer",
+          ["[b"] = "@block.outer",
+          ["[i"] = "@conditional.outer",
+          ["[o"] = "@loop.outer",
+          ["[f"] = "@call.outer",
         },
         goto_previous_end = {
           ["[M"] = "@function.outer",
           ["[]"] = "@class.outer",
+          ["[C"] = "@comment.outer",
+          ["[A"] = "@parameter.outer",
+          ["[B"] = "@block.outer",
+          ["[I"] = "@conditional.outer",
+          ["[O"] = "@loop.outer",
+          ["[F"] = "@call.outer",
         },
       },
       swap = {
         enable = true,
         swap_next = {
-          ["<leader>a"] = "@parameter.inner",
+          ["grs"] = "@parameter.inner",
         },
         swap_previous = {
-          ["<leader>A"] = "@parameter.inner",
+          ["grS"] = "@parameter.inner",
         },
       },
     },
@@ -526,6 +546,56 @@ function M.get_mini_move_mappings()
     line_right = "<M-l>",
     line_down = "<M-k>",
     line_up = "<M-j>",
+  }
+end
+
+-- Returns mini.ai mappings config
+function M.get_mini_ai_keymaps()
+  local gen_spec = require("mini.ai").gen_spec
+  return {
+    custom_textobjects = {
+      -- Argument with whitespace included in separator
+      a = gen_spec.argument({ separator = "%s*,%s*" }),
+      -- Function call with only last part (no dot in name)
+      F = gen_spec.function_call({ name_pattern = "[%w_]" }),
+      -- Treesitter textobjects
+      m = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }),
+      M = gen_spec.treesitter({ a = "@call.outer", i = "@call.inner" }),
+      c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }),
+      C = gen_spec.treesitter({ a = "@comment.outer", i = "@comment.inner" }),
+      A = gen_spec.treesitter({ a = "@parameter.outer", i = "@parameter.inner" }),
+      B = gen_spec.treesitter({ a = "@block.outer", i = "@block.inner" }),
+      i = gen_spec.treesitter({ a = "@conditional.outer", i = "@conditional.inner" }),
+      l = gen_spec.treesitter({ a = "@loop.outer", i = "@loop.inner" }),
+      -- w but with camelCase, snake_case etc. support, see https://github.com/nvim-mini/mini.nvim/discussions/1434
+      e = {
+        {
+          "%f[%a]%l+%d*",
+          "%f[%w]%d+",
+          "%f[%u]%u%f[%A]%d*",
+          "%f[%u]%u%l+%d*",
+          "%f[%u]%u%u+%d*",
+        },
+      },
+    },
+    mappings = {
+      around = "a",
+      inside = "i",
+
+      -- NOTE: These override built-in LSP selection mappings on Neovim>=0.12
+      around_next = "an",
+      inside_next = "in",
+      around_last = "al",
+      inside_last = "il",
+
+      -- Move cursor to corresponding edge of `a` textobject
+      goto_left = "[a",
+      goto_right = "]a",
+    },
+    markdown_textobjects = {
+      ["*"] = gen_spec.pair("*", "*", { type = "greedy" }),
+      ["_"] = gen_spec.pair("_", "_", { type = "greedy" }),
+    },
   }
 end
 
