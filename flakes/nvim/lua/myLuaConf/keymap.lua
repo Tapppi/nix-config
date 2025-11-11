@@ -450,6 +450,48 @@ function M.dap_lze_keys()
   }
 end
 
+-- Spider lze keys (for lazy loading)
+function M.spider_lze_keys()
+  return {
+    {
+      "w",
+      "<cmd>lua require('spider').motion('w')<CR>",
+      mode = { "n", "o", "x" },
+      desc = "Next subword (nvim-spider)",
+    },
+    {
+      "e",
+      "<cmd>lua require('spider').motion('e')<CR>",
+      mode = { "n", "o", "x" },
+      desc = "Next end of subword (nvim-spider)",
+    },
+    {
+      "b",
+      "<cmd>lua require('spider').motion('b')<CR>",
+      mode = { "n", "o", "x" },
+      desc = "Previous subword (nvim-spider)",
+    },
+    {
+      "ge",
+      "<cmd>lua require('spider').motion('ge')<CR>",
+      mode = { "n", "o", "x" },
+      desc = "Previous end of subword (nvim-spider)",
+    },
+    {
+      "<C-f>",
+      "<Esc>l<cmd>lua require('spider').motion('w')<CR>i",
+      mode = "i",
+      desc = "Next subword in insert mode (nvim-spider)",
+    },
+    {
+      "<C-b>",
+      "<Esc><cmd>lua require('spider').motion('b')<CR>i",
+      mode = "i",
+      desc = "Previous subword in insert mode (nvim-spider)",
+    },
+  }
+end
+
 -- DAP keymaps setup
 function M.setup_dap_keymaps(dap, dapui)
   vim.keymap.set("n", "<F5>", dap.continue, { desc = "Debug: Start/Continue" })

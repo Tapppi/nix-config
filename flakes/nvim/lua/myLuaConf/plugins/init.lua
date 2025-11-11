@@ -30,6 +30,7 @@ require("lze").load({
   { import = "myLuaConf.plugins.snacks" },
   -- lazy
   { import = "myLuaConf.plugins.mini" },
+  { import = "myLuaConf.plugins.motions" },
   { import = "myLuaConf.plugins.telescope" },
   { import = "myLuaConf.plugins.treesitter" },
   { import = "myLuaConf.plugins.completion" },

@@ -152,6 +152,7 @@
             vim-sleuth
             plenary-nvim
             nvim-notify # TODO: Replace with snacks notify
+            nvim-spider
           ];
           extra = [
             oil-nvim

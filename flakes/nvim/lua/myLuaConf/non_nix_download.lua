@@ -74,6 +74,7 @@ require('nixCatsUtils.catPacker').setup({
   { 'tpope/vim-sleuth' },
   { 'OXY2DEV/helpview.nvim' },
   { 'hiphish/rainbow-delimiters.nvim' },
+  { 'chrisgrieser/nvim-spider', opt = true, },
   { 'mbbill/undotree', opt = true, },
   { 'tpope/vim-fugitive', opt = true, },
   { 'tpope/vim-rhubarb', opt = true, },
