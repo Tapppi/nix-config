@@ -1,4 +1,4 @@
-{ config, pkgs, lib, home-manager, ... }:
+{ config, pkgs, lib, home-manager, inputs, ... }:
 
 let
   user = "tapani";
@@ -47,6 +47,7 @@ in
   # Enable home-manager
   home-manager = {
     useGlobalPkgs = true;
+    extraSpecialArgs = { inherit inputs; };
     users.${user} = { pkgs, config, lib, ... }:{
       imports = [
         ../shared/home-manager.nix

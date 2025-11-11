@@ -29,9 +29,18 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixCats = {
+      url = "github:BirdeeHub/nixCats-nvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nvim = {
+      url = "path:./flakes/nvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixCats.follows = "nixCats";
+    };
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, nixCats, nvim } @inputs:
     let
       user = "tapani";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -112,6 +121,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
+              extraSpecialArgs = { inherit inputs; };
               users.${user} = import ./modules/nixos/home-manager.nix;
             };
           }

@@ -162,6 +162,21 @@
         "type": "github"
       }
     },
+    "nixCats": {
+      "locked": {
+        "lastModified": 1762227818,
+        "narHash": "sha256-GSnU4XJucZojGVBGY7djqsT37P9YViCMTVw58tsqrOs=",
+        "owner": "BirdeeHub",
+        "repo": "nixCats-nvim",
+        "rev": "fa7991a4fa7d7227486910ce6724215b88eb8296",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BirdeeHub",
+        "repo": "nixCats-nvim",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1746461020,
@@ -223,6 +238,42 @@
         "type": "github"
       }
     },
+    "nvim": {
+      "inputs": {
+        "nixCats": [
+          "nixCats"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "plugins-wezterm-types": "plugins-wezterm-types"
+      },
+      "locked": {
+        "path": "./flakes/nvim",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/nvim",
+        "type": "path"
+      },
+      "parent": []
+    },
+    "plugins-wezterm-types": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1750319838,
+        "narHash": "sha256-Pa0luCHxYTRlpMeUaZS9jkhqcpHupBNE3yD8oJKiYLU=",
+        "owner": "gonstoll",
+        "repo": "wezterm-types",
+        "rev": "bba4eacfdce545a9d5c29c69d20bbb9c90189224",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gonstoll",
+        "repo": "wezterm-types",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "darwin": "darwin",
@@ -232,7 +283,9 @@
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs_4"
+        "nixCats": "nixCats",
+        "nixpkgs": "nixpkgs_4",
+        "nvim": "nvim"
       }
     }
   },
