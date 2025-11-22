@@ -9,8 +9,8 @@ local helpers = require("myLuaConf.helpers")
 -- ============================================================================
 
 function M.setup_global_keymaps()
-  vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll Down" })
-  vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll Up" })
+  vim.keymap.set("n", "<C-f>", "<C-d>zz", { desc = "Scroll Down" })
+  vim.keymap.set("n", "<C-b>", "<C-u>zz", { desc = "Scroll Up" })
   vim.keymap.set("n", "n", "nzzzv", { desc = "Next Search Result" })
   vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous Search Result" })
 
