@@ -215,12 +215,18 @@ function M.setup_gitsigns_keymaps(bufnr)
   end
 
   -- Navigation
+  local next_hunk_repeat, prev_hunk_repeat = gs.next_hunk, gs.prev_hunk
+  local ok, ts_repeat_move = pcall(require, "nvim-treesitter.textobjects.repeatable_move")
+  if ok then
+    next_hunk_repeat, prev_hunk_repeat = ts_repeat_move.make_repeatable_move_pair(gs.next_hunk, gs.prev_hunk)
+  end
+
   map({ "n", "v" }, "]g", function()
     if vim.wo.diff then
       return "]c"
     end
     vim.schedule(function()
-      gs.next_hunk()
+      next_hunk_repeat()
     end)
     return "<Ignore>"
   end, { expr = true, desc = "Jump to next git hunk" })
@@ -230,7 +236,7 @@ function M.setup_gitsigns_keymaps(bufnr)
       return "[c"
     end
     vim.schedule(function()
-      gs.prev_hunk()
+      prev_hunk_repeat()
     end)
     return "<Ignore>"
   end, { expr = true, desc = "Jump to previous git hunk" })
@@ -507,6 +513,16 @@ end
 
 -- Returns treesitter keymaps config
 function M.get_treesitter_keymaps()
+  local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
+  -- Repeat movements with `;` and `,`
+  vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+  vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+
+  -- Make builtin f, F, t, T also repeatable with `;` and `,`
+  vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
   return {
     incremental_selection = {
       enable = true,
