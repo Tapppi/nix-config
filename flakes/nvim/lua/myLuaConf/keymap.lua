@@ -60,12 +60,6 @@ function M.setup_global_keymaps()
     { noremap = true, silent = true, desc = "Paste from clipboard from within insert mode" }
   )
 
-  -- Better "paste over selection" and "select all"
-  vim.keymap.set("x", "<leader>P", '"_dP', {
-    noremap = true,
-    silent = true,
-    desc = "Paste over selection without erasing unnamed register",
-  })
   vim.keymap.set({ "n", "v", "x" }, "<leader><C-a>", "gg0vG$", { noremap = true, silent = true, desc = "Select all" })
 
   -- Move lines
@@ -147,7 +141,7 @@ function M.setup_lsp_keymaps(_, bufnr)
   nmap("gd", vim.lsp.buf.definition, "[G]oto [D]efinition")
 
   -- Telescope-based keymaps (conditional on telescope category)
-  if nixCats("general.telescope") then
+  if catUtils.enableForCategory("general.telescope", true) then
     nmap("gr", function()
       require("telescope.builtin").lsp_references()
     end, "[G]oto [R]eferences")
