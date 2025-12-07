@@ -10,6 +10,8 @@ require('lze').load {
         zsh = { 'zsh', 'shellcheck' },
         markdown = { 'markdownlint-cli2' },
         go = { 'golangci-lint' },
+        python = { 'ruff' },
+        mojo = { 'mojo' },
         -- javascript = { 'eslint' },
         -- typescript = { 'eslint' },
       }

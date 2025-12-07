@@ -76,6 +76,9 @@
           go = [
             golangci-lint
           ];
+          python = [
+            ruff
+          ];
         };
         debug = with pkgs; {
           go = [ delve ];
@@ -95,6 +98,9 @@
           ];
           zig = [
             zig
+          ];
+          python = [
+            ruff
           ];
         };
         rust = with pkgs; [
@@ -127,6 +133,18 @@
         ];
         gleam = with pkgs; [
           gleam  # Compiler, CLI tools, formatter (gleam format), and LSP (gleam lsp)
+        ];
+        python = with pkgs; [
+          basedpyright  # Python LSP server (fork of pyright with more features)
+          ruff  # Fast Python linter and formatter
+        ];
+        mojo = with pkgs; [
+          # Note: Mojo toolchain includes LSP, linter, and formatter
+          # If mojo package is not available in nixpkgs, users will need to install manually
+          # or use Mason fallback outside of Nix
+        ];
+        swift = with pkgs; [
+          sourcekit-lsp  # Swift LSP server (includes formatting)
         ];
       };
 
@@ -323,6 +341,14 @@
         zig = [
           [ "format" "zig" ]
         ];
+        python = [
+          [ "lint" "python" ]
+          [ "format" "python" ]
+        ];
+        mojo = [
+          [ "lint" "mojo" ]
+          [ "format" "mojo" ]
+        ];
       };
     };
 
@@ -343,12 +369,15 @@
       lua = true;
       neonixdev = true;
       gleam = true;
+      python = true;
       zig = false;
 
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
       # rust = true;
+      # swift = true;
       # typescript = true;
+      # mojo = true;
 
       # Categories don't *have* to have plugins to be used:
       lspDebugMode = false;

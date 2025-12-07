@@ -203,4 +203,40 @@ require("lze").load {
       -- filetypes will be auto-detected as { "gleam" }
     },
   },
+  {
+    "basedpyright",
+    for_cat = "python",
+    lsp = {
+      settings = {
+        basedpyright = {
+          analysis = {
+            typeCheckingMode = "standard",
+          },
+        },
+      },
+    },
+  },
+  {
+    "ruff",
+    for_cat = "python",
+    lsp = {},
+  },
+  {
+    "mojo",
+    for_cat = "mojo",
+    lsp = {
+      -- Mojo LSP server is part of the Mojo toolchain
+      -- Run with: mojo lsp
+      -- Note: Mojo may not be available in nixpkgs yet
+      -- filetypes will be auto-detected as { "mojo" }
+    },
+  },
+  {
+    "sourcekit",
+    for_cat = "swift",
+    lsp = {
+      -- Swift LSP server with built-in formatting support
+      -- filetypes will be auto-detected as { "swift" }
+    },
+  },
 }

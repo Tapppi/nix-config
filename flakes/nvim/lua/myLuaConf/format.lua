@@ -77,6 +77,9 @@ require("lze").load({
           graphql = function(bufnr)
             return { first(bufnr, "prettierd", "prettier") }
           end,
+          python = { "ruff_organize_imports", "ruff_format" },
+          mojo = { "mojo_format" },
+          -- Swift uses LSP formatting (sourcekit-lsp) via lsp_format fallback
         },
       })
 
