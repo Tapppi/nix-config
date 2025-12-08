@@ -56,8 +56,8 @@ vim.opt.mouse = 'a'
 -- Indent, try smartindent on file if cindent is not satisfactory
 vim.opt.cpoptions:append('I')
 vim.opt.autoindent = true
--- vim.opt.smartindent = true
-vim.opt.cindent = true
+vim.opt.smartindent = false
+vim.opt.cindent = false
 vim.opt.expandtab = true
 vim.opt.smarttab = true
 -- Tab sizes are set by vim-sleuth automatically and respect .editorconfig
