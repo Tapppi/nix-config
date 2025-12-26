@@ -60,6 +60,7 @@ require("lze").load {
     "lazydev.nvim",
     for_cat = "neonixdev",
     cmd = { "LazyDev" },
+    on_require = { "lazydev" },
     ft = "lua",
     after = function(_)
       require("lazydev").setup({
