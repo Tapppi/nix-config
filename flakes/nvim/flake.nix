@@ -144,7 +144,9 @@
           # or use Mason fallback outside of Nix
         ];
         swift = with pkgs; [
-          sourcekit-lsp  # Swift LSP server (includes formatting)
+          # Sourcekit LSP build caching is broken on nix, it always builds.
+          # Happily enough, it's available on macOS systems with xcode or another swift toolchain
+          # sourcekit-lsp  # Swift LSP server (includes formatting)
         ];
       };
 
@@ -371,11 +373,11 @@
       gleam = true;
       python = true;
       zig = false;
+      swift = true;
 
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
       # rust = true;
-      # swift = true;
       # typescript = true;
       # mojo = true;
 
