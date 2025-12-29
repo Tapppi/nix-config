@@ -342,6 +342,19 @@ function M.telescope_lze_keys()
       desc = "[S]earch current [W]ord",
     },
     {
+      "<leader>sv",
+      function()
+        -- Get the selected text
+        local lines = vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."), { type = vim.fn.visualmode() })
+        local search_string = table.concat(lines, "\n")
+
+        -- Search with telescope
+        require("telescope.builtin").grep_string({ search = search_string })
+      end,
+      mode = { "x" },
+      desc = "[S]earch current [V]isual selection",
+    },
+    {
       "<leader>ss",
       function()
         return require("telescope.builtin").builtin()
