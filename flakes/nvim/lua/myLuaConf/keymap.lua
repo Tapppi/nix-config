@@ -24,7 +24,9 @@ function M.setup_global_keymaps()
   vim.keymap.set("n", "<leader><leader>o", "<cmd>BufOnly<CR>", { desc = "Close all other buffers" })
 
   -- Toggle word wrap
-  vim.keymap.set("n", "yow", function () vim.wo.wrap = not vim.wo.wrap end, { desc = "Toggle word wrap", silent = true })
+  vim.keymap.set("n", "yow", function()
+    vim.wo.wrap = not vim.wo.wrap
+  end, { desc = "Toggle word wrap", silent = true })
   -- Remap for dealing with word wrap
   vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
   vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
