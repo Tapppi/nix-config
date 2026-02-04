@@ -495,10 +495,11 @@
         '';
       };
       test = pkgs.mkShell {
-        name = testPackage;
-        packages = [ testPackage ];
+        name = testPackageName;
+        packages = [ defaultPackage testPackage ];
         inputsFrom = [ ];
         shellHook = ''
+            export EDITOR=tvi
         '';
       };
     };
