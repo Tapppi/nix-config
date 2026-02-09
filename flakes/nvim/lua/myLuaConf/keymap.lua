@@ -64,7 +64,7 @@ function M.setup_global_keymaps()
     { noremap = true, silent = true, desc = "Paste from clipboard from within insert mode" }
   )
 
-  vim.keymap.set({ "n", "v", "x" }, "<leader><C-a>", "gg0vG$", { noremap = true, silent = true, desc = "Select all" })
+  vim.keymap.set({ "n", "v", "x" }, "<leader>a", "gg0vG$", { noremap = true, silent = true, desc = "Select all" })
 
   -- Move lines
   -- This is replaced by mini.move
