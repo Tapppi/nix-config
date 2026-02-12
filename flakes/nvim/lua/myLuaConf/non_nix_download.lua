@@ -70,6 +70,9 @@ require('nixCatsUtils.catPacker').setup({
   { 'jay-babu/mason-nvim-dap.nvim', opt = true, },
   { 'mfussenegger/nvim-dap', opt = true, },
 
+  { 'kevinhwang91/promise-async', opt = true, },
+  { 'kevinhwang91/nvim-ufo', opt = true, },
+
   -- general UX
   { 'tpope/vim-sleuth' },
   { 'OXY2DEV/helpview.nvim' },

@@ -52,6 +52,12 @@ vim.opt.signcolumn = "yes"
 -- Enable mouse for all modes
 vim.opt.mouse = "a"
 
+-- Folding (nvim-ufo requires these settings)
+vim.opt.foldcolumn = "1"
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+vim.opt.foldenable = true
+
 --{{{ Editorconfig related stuff
 -- Indent, try smartindent on file if cindent is not satisfactory
 vim.opt.cpoptions:append("I")

@@ -272,6 +272,8 @@
             which-key-nvim
             undotree
             lazygit-nvim
+            nvim-ufo
+            promise-async
           ];
           extra = with pkgs.vimPlugins; [
             fidget-nvim

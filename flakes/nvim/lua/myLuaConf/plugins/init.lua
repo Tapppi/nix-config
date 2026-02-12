@@ -183,4 +183,18 @@ require("lze").load({
     cmd = { "LazyGit", "LazyGitConfig", "LazyGitCurrentFile", "LazyGitFilter", "LazyGitFilterCurrentFile" },
     keys = keymap.lazygit_lze_keys(),
   },
+  {
+    "promise-async",
+    for_cat = "general.always",
+    dep_of = { "nvim-ufo" },
+  },
+  {
+    "nvim-ufo",
+    for_cat = "general.always",
+    event = "DeferredUIEnter",
+    after = function(_)
+      require("ufo").setup()
+      keymap.setup_ufo_keymaps()
+    end,
+  },
 })

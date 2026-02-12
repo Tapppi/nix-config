@@ -11,8 +11,8 @@ end
 -- nixCats gives us the paths, which is faster than searching the rtp!
 local old_ft_fallback = require("lze").h.lsp.get_ft_fallback()
 require("lze").h.lsp.set_ft_fallback(function(name)
-  local lspcfg = nixCats.pawsible({ "allPlugins", "opt", "nvim-lspconfig" }) or
-      nixCats.pawsible({ "allPlugins", "start", "nvim-lspconfig" })
+  local lspcfg = nixCats.pawsible({ "allPlugins", "opt", "nvim-lspconfig" })
+    or nixCats.pawsible({ "allPlugins", "start", "nvim-lspconfig" })
   if lspcfg then
     local ok, cfg = pcall(dofile, lspcfg .. "/lsp/" .. name .. ".lua")
     if not ok then
@@ -24,7 +24,7 @@ require("lze").h.lsp.set_ft_fallback(function(name)
   end
 end)
 
-require("lze").load {
+require("lze").load({
   {
     "nvim-lspconfig",
     for_cat = "general.always",
@@ -37,8 +37,14 @@ require("lze").load {
       vim.lsp.enable(plugin.name)
     end,
     before = function(_)
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities.textDocument.foldingRange = {
+        dynamicRegistration = false,
+        lineFoldingOnly = true,
+      }
       vim.lsp.config("*", {
         on_attach = keymap.setup_lsp_keymaps,
+        capabilities = capabilities,
       })
     end,
   },
@@ -52,7 +58,7 @@ require("lze").load {
       vim.cmd.packadd("mason-lspconfig.nvim")
       require("mason").setup()
       -- auto install will make it install servers when lspconfig is called on them.
-      require("mason-lspconfig").setup { automatic_installation = true, }
+      require("mason-lspconfig").setup({ automatic_installation = true })
     end,
   },
   {
@@ -81,10 +87,6 @@ require("lze").load {
     -- name of the lsp
     "lua_ls",
     enabled = nixCats("lua") or nixCats("neonixdev") or false,
-    -- provide a table containing filetypes,
-    -- and then whatever your functions defined in the function type specs expect.
-    -- in our case, it just expects the normal lspconfig setup options,
-    -- but with a default on_attach and capabilities
     lsp = {
       settings = {
         Lua = {
@@ -101,7 +103,6 @@ require("lze").load {
         },
       },
     },
-    -- also these are regular specs and you can use before and after and all the other normal fields
   },
   {
     "bash-language-server",
@@ -136,13 +137,13 @@ require("lze").load {
       "neovim/nvim-lspconfig",
     },
     ft = { "javascriptreact", "typescriptreact", "javascript", "typescript" },
-    after = function (_)
-      require("typescript-tools").setup {
+    after = function(_)
+      require("typescript-tools").setup({
         expose_as_code_action = "all",
         jsx_close_tag = {
-          enable = true
+          enable = true,
         },
-      }
+      })
     end,
   },
   {
@@ -166,32 +167,32 @@ require("lze").load {
           -- nixd requires some configuration, we pass it through the 'extra' field in our packageDefinitions
           -- https://github.com/nix-community/nixd/blob/main/nixd/docs/configuration.md
           nixpkgs = {
-            expr = nixCats.extra("nixdExtras.nixpkgs") or 'import <nixpkgs> {}',
+            expr = nixCats.extra("nixdExtras.nixpkgs") or "import <nixpkgs> {}",
           },
           options = {
             -- If you integrated with your system flake, you should use inputs.self as the path to your system flake
             -- that way it will ALWAYS work, regardless of where your config actually was.
             nixos = {
               -- nixdExtras.nixos_options = ''(builtins.getFlake "path:${builtins.toString inputs.self.outPath}").nixosConfigurations.configname.options''
-              expr = nixCats.extra("nixdExtras.nixos_options")
+              expr = nixCats.extra("nixdExtras.nixos_options"),
             },
             -- If you have your config as a separate flake, inputs.self would be referring to the wrong flake.
             -- You can override the correct one into your package definition on import in your main configuration,
             -- or just put an absolute path to where it usually is and accept the impurity.
             ["home-manager"] = {
               -- nixdExtras.home_manager_options = ''(builtins.getFlake "path:${builtins.toString inputs.self.outPath}").homeConfigurations.configname.options''
-              expr = nixCats.extra("nixdExtras.home_manager_options")
-            }
+              expr = nixCats.extra("nixdExtras.home_manager_options"),
+            },
           },
           formatting = {
-            command = { "nixfmt" }
+            command = { "nixfmt" },
           },
           diagnostic = {
             suppress = {
-              "sema-escaping-with"
-            }
-          }
-        }
+              "sema-escaping-with",
+            },
+          },
+        },
       },
     },
   },
@@ -240,4 +241,4 @@ require("lze").load {
       -- filetypes will be auto-detected as { "swift" }
     },
   },
-}
+})
