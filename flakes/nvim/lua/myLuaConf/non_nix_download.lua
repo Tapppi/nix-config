@@ -49,6 +49,7 @@ require('nixCatsUtils.catPacker').setup({
   { 'williamboman/mason-lspconfig.nvim', opt = true, },
   { 'j-hui/fidget.nvim', opt = true, },
   { 'neovim/nvim-lspconfig', opt = true, },
+  { 'pmizio/typescript-tools.nvim', opt = true, },
   { 'folke/lazydev.nvim', opt = true, },
 
   -- completion

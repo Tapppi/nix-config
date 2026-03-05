@@ -380,7 +380,7 @@
       # NOTE: ALSO enables debug.go and debug.default due to our extraCats in categoryDefinitions
       # go = true;
       # rust = true;
-      # typescript = true;
+      typescript = true;
       # mojo = true;
 
       # Categories don't *have* to have plugins to be used:

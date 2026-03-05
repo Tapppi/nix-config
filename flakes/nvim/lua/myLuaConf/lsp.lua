@@ -1,6 +1,12 @@
 local catUtils = require("nixCatsUtils")
 local keymap = require("myLuaConf.keymap")
 
+local lsp_capabilities = vim.lsp.protocol.make_client_capabilities()
+lsp_capabilities.textDocument.foldingRange = {
+  dynamicRegistration = false,
+  lineFoldingOnly = true,
+}
+
 if catUtils.enableForCategory("lspDebugMode", false) then
   vim.lsp.set_log_level("debug")
 end
@@ -37,14 +43,9 @@ require("lze").load({
       vim.lsp.enable(plugin.name)
     end,
     before = function(_)
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities.textDocument.foldingRange = {
-        dynamicRegistration = false,
-        lineFoldingOnly = true,
-      }
       vim.lsp.config("*", {
         on_attach = keymap.setup_lsp_keymaps,
-        capabilities = capabilities,
+        capabilities = lsp_capabilities,
       })
     end,
   },
@@ -139,9 +140,18 @@ require("lze").load({
     ft = { "javascriptreact", "typescriptreact", "javascript", "typescript" },
     after = function(_)
       require("typescript-tools").setup({
-        expose_as_code_action = "all",
-        jsx_close_tag = {
-          enable = true,
+        on_attach = keymap.setup_lsp_keymaps,
+        capabilities = lsp_capabilities,
+        settings = {
+          separate_diagnostic_server = true,
+          publish_diagnostic_on = "insert_leave",
+          expose_as_code_action = "all",
+          include_completions_with_insert_text = true,
+          tsserver_max_memory = "auto",
+          jsx_close_tag = {
+            enable = true,
+            filetypes = { "javascriptreact", "typescriptreact" },
+          },
         },
       })
     end,
