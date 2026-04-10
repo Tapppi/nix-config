@@ -27,6 +27,21 @@
     # will not apply to module imports
     # as that will have your system values
     extra_pkg_config = {
+      # Silence the nixpkgs x86_64-darwin deprecation warning while Intel Macs are
+      # still supported. 26.05 is the last supported nixpkgs release for Intel
+      # macOS, and the release notes say binaries/support continue until 26.05
+      # goes EOL at the end of 2026.
+      #
+      # Recommended strategy:
+      # - keep using nixpkgs-unstable for now on both Apple Silicon and Intel;
+      # - once 26.05 is released, pin a separate nixpkgs input for Intel-only
+      #   x86_64-darwin builds if unstable/26.11 drops support;
+      # - keep aarch64-darwin on newer nixpkgs revisions.
+      #
+      # This flake can support that future split by selecting nixpkgs per system,
+      # but for now a single input plus allowDeprecatedx86_64Darwin keeps Intel
+      # evaluation working without dropping support.
+      allowDeprecatedx86_64Darwin = true;
       # allowUnfree = true;
     };
     # ${pkgs.system} is available in categoryDefinitions and packageDefinitions
@@ -474,7 +489,10 @@
 
     # this pkgs variable is just for using utils such as pkgs.mkShell
     # within this outputs set.
-    pkgs = import nixpkgs { inherit system; };
+    pkgs = import nixpkgs {
+      inherit system;
+      config = extra_pkg_config;
+    };
     # The one used to build neovim is resolved inside the builder
     # and is passed to our categoryDefinitions and packageDefinitions
   in {
