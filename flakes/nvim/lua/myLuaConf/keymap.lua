@@ -150,23 +150,28 @@ function M.setup_lsp_keymaps(_, bufnr)
 
   nmap("gd", vim.lsp.buf.definition, "[G]oto [D]efinition")
 
-  -- Telescope-based keymaps (conditional on telescope category)
+  -- Telescope-enhanced LSP keymaps (capital last letter = telescope picker variant)
+  -- Lowercase gr* keymaps (grr, grn, gra, gri, grt, grx) are Neovim 0.12 built-in defaults
   if catUtils.enableForCategory("general.telescope", true) then
-    nmap("gr", function()
+    nmap("grR", function()
       require("telescope.builtin").lsp_references()
-    end, "[G]oto [R]eferences")
-    nmap("gI", function()
+    end, "[G]oto [R]eferences (telescope)")
+    nmap("grI", function()
       require("telescope.builtin").lsp_implementations()
-    end, "[G]oto [I]mplementation")
-    nmap("<leader>ds", function()
+    end, "[G]oto [I]mplementation (telescope)")
+    nmap("grT", function()
+      require("telescope.builtin").lsp_type_definitions()
+    end, "[G]oto [T]ype definition (telescope)")
+    nmap("grD", function()
+      require("telescope.builtin").lsp_definitions()
+    end, "[G]oto [D]efinition (telescope)")
+    nmap("gO", function()
       require("telescope.builtin").lsp_document_symbols()
-    end, "[D]ocument [S]ymbols")
+    end, "Document symbols (telescope)")
     nmap("<leader>ws", function()
       require("telescope.builtin").lsp_dynamic_workspace_symbols()
-    end, "[W]orkspace [S]ymbols")
+    end, "[W]orkspace [S]ymbols (telescope)")
   end
-
-  nmap("<leader>D", vim.lsp.buf.type_definition, "Type [D]efinition")
 
   -- See `:help K` for why this keymap
   nmap("K", vim.lsp.buf.hover, "Hover Documentation")
