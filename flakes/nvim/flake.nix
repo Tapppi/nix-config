@@ -144,7 +144,7 @@
         neonixdev = with pkgs; [
           nix-doc
           nixd
-          nixfmt-rfc-style
+          nixfmt
         ];
         gleam = with pkgs; [
           gleam  # Compiler, CLI tools, formatter (gleam format), and LSP (gleam lsp)
