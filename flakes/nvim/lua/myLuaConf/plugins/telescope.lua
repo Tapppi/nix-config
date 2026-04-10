@@ -31,46 +31,46 @@ return {
     cmd = { "Telescope", "LiveGrepGitRoot" },
     -- NOTE: our on attach function defines keybinds that call telescope.
     -- so, the on_require handler will load telescope when we use those.
-    on_require = { "telescope", },
+    on_require = { "telescope" },
     keys = keymap.telescope_lze_keys(),
     load = function(name)
-      vim.cmd.packadd(name)
-      vim.cmd.packadd("telescope-fzf-native.nvim")
-      vim.cmd.packadd("telescope-ui-select.nvim")
+      vim.cmd.packadd({ args = { name } })
+      vim.cmd.packadd({ args = { "telescope-fzf-native.nvim" } })
+      vim.cmd.packadd({ args = { "telescope-ui-select.nvim" } })
     end,
     after = function()
-      require('telescope').setup {
+      require("telescope").setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
           mappings = {
-            i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+            i = { ["<c-enter>"] = "to_fuzzy_refine" },
           },
         },
         -- pickers = {}
         extensions = {
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
+          ["ui-select"] = {
+            require("telescope.themes").get_dropdown(),
           },
         },
-      }
+      })
 
       -- Enable telescope extensions, if they are installed
-      pcall(require('telescope').load_extension, 'fzf')
-      pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require("telescope").load_extension, "fzf")
+      pcall(require("telescope").load_extension, "ui-select")
 
       -- Command for git root
-      vim.api.nvim_create_user_command('LiveGrepGitRoot', helpers.telescope_live_grep_git_root, {})
+      vim.api.nvim_create_user_command("LiveGrepGitRoot", helpers.telescope_live_grep_git_root, {})
 
       -- Autocommands
-      local telescope_group = vim.api.nvim_create_augroup('Telescope_usr', { clear = true })
+      local telescope_group = vim.api.nvim_create_augroup("Telescope_usr", { clear = true })
 
       -- Show linenumbers in telescope
-      vim.api.nvim_create_autocmd('User', {
-        pattern = 'TelescopePreviewerLoaded',
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "TelescopePreviewerLoaded",
         group = telescope_group,
-        command = 'setlocal number',
+        command = "setlocal number",
       })
     end,
   },

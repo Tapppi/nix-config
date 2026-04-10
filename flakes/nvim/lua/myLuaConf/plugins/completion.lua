@@ -1,8 +1,8 @@
 local keymap = require("myLuaConf.keymap")
 
 local load_w_after = function(name)
-  vim.cmd.packadd(name)
-  vim.cmd.packadd(name .. '/after')
+  vim.cmd.packadd({ args = { name } })
+  vim.cmd.packadd({ args = { name .. "/after" } })
 end
 
 return {
@@ -22,9 +22,9 @@ return {
     for_cat = "general.blink",
     dep_of = { "blink.cmp" },
     after = function(_)
-      local ls = require 'luasnip'
-      require('luasnip.loaders.from_vscode').lazy_load()
-      ls.config.setup {}
+      local ls = require("luasnip")
+      require("luasnip.loaders.from_vscode").lazy_load()
+      ls.config.setup({})
 
       keymap.setup_luasnip_keymaps(ls)
     end,
@@ -43,7 +43,7 @@ return {
         -- 'default' (recommended) for mappings similar to built-in completions (C-y to accept)
         -- See :h blink-cmp-config-keymap for configuring keymaps
         keymap = {
-          preset = 'default',
+          preset = "default",
         },
         cmdline = {
           enabled = true,
@@ -56,20 +56,24 @@ return {
           sources = function()
             local type = vim.fn.getcmdtype()
             -- Search forward and backward
-            if type == '/' or type == '?' then return { 'buffer' } end
+            if type == "/" or type == "?" then
+              return { "buffer" }
+            end
             -- Commands
-            if type == ':' or type == '@' then return { 'cmdline', 'cmp_cmdline' } end
+            if type == ":" or type == "@" then
+              return { "cmdline", "cmp_cmdline" }
+            end
             return {}
           end,
         },
         fuzzy = {
           -- See the docs for control of how prebuilt binaries are installed
-          implementation = 'prefer_rust_with_warning',
+          implementation = "prefer_rust_with_warning",
           sorts = {
-            'exact',
+            "exact",
             -- defaults
-            'score',
-            'sort_text',
+            "score",
+            "sort_text",
           },
         },
         signature = {
@@ -88,7 +92,7 @@ return {
               -- We don't need label_description now because label and label_description are already
               -- combined together in label by colorful-menu.nvim.
               -- TODO: fix { "kind_icon" }, test label_description with lang where it matters
-              columns = { { "kind" }, { "label" , gap = 1 }, { "source_name" }, },
+              columns = { { "kind" }, { "label", gap = 1 }, { "source_name" } },
               components = {
                 label = {
                   text = function(ctx)
@@ -109,16 +113,16 @@ return {
               max_height = 20,
               max_width = 65,
               winblend = 15,
-            }
+            },
           },
         },
         snippets = {
-          preset = 'luasnip',
+          preset = "luasnip",
         },
         sources = {
-          default = { 'lsp', 'path', 'snippets', 'buffer', 'omni' },
+          default = { "lsp", "path", "snippets", "buffer", "omni" },
           per_filetype = {
-            lua = { 'lsp', 'path', 'snippets', 'buffer', 'omni', 'lazydev' },
+            lua = { "lsp", "path", "snippets", "buffer", "omni", "lazydev" },
           },
           providers = {
             path = {
@@ -131,18 +135,18 @@ return {
               score_offset = 40,
             },
             cmp_cmdline = {
-              name = 'cmp_cmdline',
-              module = 'blink.compat.source',
+              name = "cmp_cmdline",
+              module = "blink.compat.source",
               score_offset = -100,
               opts = {
-                cmp_name = 'cmdline',
+                cmp_name = "cmdline",
               },
             },
             lazydev = {
-              name = 'LazyDev',
-              module = 'lazydev.integrations.blink',
+              name = "LazyDev",
+              module = "lazydev.integrations.blink",
               score_offset = 100,
-              enabled = nixCats('neonixdev'),
+              enabled = nixCats("neonixdev"),
             },
           },
         },
@@ -150,4 +154,3 @@ return {
     end,
   },
 }
-

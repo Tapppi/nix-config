@@ -55,8 +55,8 @@ require("lze").load({
     enabled = not catUtils.isNixCats,
     on_plugin = { "nvim-lspconfig" },
     load = function(name)
-      vim.cmd.packadd(name)
-      vim.cmd.packadd("mason-lspconfig.nvim")
+      vim.cmd.packadd({ args = { name } })
+      vim.cmd.packadd({ args = { "mason-lspconfig.nvim" } })
       require("mason").setup()
       -- auto install will make it install servers when lspconfig is called on them.
       require("mason-lspconfig").setup({ automatic_installation = true })
