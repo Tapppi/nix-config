@@ -117,14 +117,39 @@ require("lze").load({
           section_separators = "",
         },
         sections = {
+          lualine_b = {
+            "branch",
+            "diff",
+            "diagnostics",
+          },
           lualine_c = {
             {
               "filename",
               path = 1,
               status = true,
             },
+            {
+              function()
+                if vim.bo.busy then
+                  return "◐"
+                end
+                return ""
+              end,
+            },
           },
           lualine_x = {
+            {
+              function()
+                if vim.bo.buftype ~= "terminal" then
+                  return ""
+                end
+                local info = vim.api.nvim_get_chan_info(vim.bo.channel)
+                if info.exitcode then
+                  return "exit:" .. info.exitcode
+                end
+                return ""
+              end,
+            },
             "encoding",
             "fileformat",
             "filetype",
