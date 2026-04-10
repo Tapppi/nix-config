@@ -44,7 +44,7 @@
       allowDeprecatedx86_64Darwin = true;
       # allowUnfree = true;
     };
-    # ${pkgs.system} is available in categoryDefinitions and packageDefinitions
+    # ${pkgs.stdenv.hostPlatform.system} is available in categoryDefinitions and packageDefinitions
     # It is resolved in the builder and passed to only those sections
 
     # :help nixCats.flake.outputs.overlays
@@ -421,7 +421,7 @@
           # Name for searching .config and .local and so on, i.e. controls sharing between packages for auth etc.
           # :h $NVIM_APPNAME
           configDirName = "nvim";
-          # neovim-unwrapped = inputs.neovim-nightly-overlay.packages.${pkgs.system}.neovim;
+          # neovim-unwrapped = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.neovim;
           # hosts.python3.enable = true;
           # hosts.node.enable = true;
         };
