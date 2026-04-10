@@ -234,9 +234,10 @@ function M.setup_gitsigns_keymaps(bufnr)
 
   -- Navigation
   local next_hunk_repeat, prev_hunk_repeat = gs.next_hunk, gs.prev_hunk
-  local ok, ts_repeat_move = pcall(require, "nvim-treesitter.textobjects.repeatable_move")
+  local ok, ts_repeat_move = pcall(require, "nvim-treesitter-textobjects.repeatable_move")
   if ok then
-    next_hunk_repeat, prev_hunk_repeat = ts_repeat_move.make_repeatable_move_pair(gs.next_hunk, gs.prev_hunk)
+    next_hunk_repeat = ts_repeat_move.make_repeatable_move(gs.next_hunk)
+    prev_hunk_repeat = ts_repeat_move.make_repeatable_move(gs.prev_hunk)
   end
 
   map({ "n", "v" }, "]g", function()
@@ -544,7 +545,7 @@ end
 
 -- Returns treesitter keymaps config
 function M.get_treesitter_keymaps()
-  local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
+  local ts_repeat_move = require("nvim-treesitter-textobjects.repeatable_move")
   -- Repeat movements with `;` and `,`
   vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
   vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
