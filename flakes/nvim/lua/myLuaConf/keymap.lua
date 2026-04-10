@@ -191,13 +191,6 @@ function M.setup_lsp_keymaps(_, bufnr)
   end, { desc = "Format current buffer with LSP" })
   nmap("<leader>fF", vim.lsp.buf.format, "Format current buffer with LSP")
 
-  -- LSP selection range keymaps (visual mode)
-  vim.keymap.set("x", "s", function()
-    vim.lsp.buf.selection_range(1 * vim.v.count1)
-  end, { buffer = bufnr, desc = "LSP: Increase selection" })
-  vim.keymap.set("x", "S", function()
-    vim.lsp.buf.selection_range(-1 * vim.v.count1)
-  end, { buffer = bufnr, desc = "LSP: Decrease selection" })
 end
 
 -- ============================================================================
@@ -560,14 +553,21 @@ function M.get_treesitter_keymaps()
   vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F_expr, { expr = true })
   vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
   vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
+
+  local next_sentence, prev_sentence = ts_repeat_move.make_repeatable_move_pair(
+    function() vim.cmd("normal! )") end,
+    function() vim.cmd("normal! (") end
+  )
+  vim.keymap.set({ "n", "x", "o" }, "]s", next_sentence, { desc = "Next sentence" })
+  vim.keymap.set({ "n", "x", "o" }, "[s", prev_sentence, { desc = "Previous sentence" })
   return {
     incremental_selection = {
       enable = true,
       keymaps = {
-        init_selection = "<c-a>",
-        node_incremental = "<c-a>",
-        scope_incremental = "<c-s>",
-        node_decremental = "<M-a>",
+        init_selection = "s",
+        node_incremental = "s",
+        scope_incremental = "<C-s>",
+        node_decremental = "S",
       },
     },
     textobjects = {
