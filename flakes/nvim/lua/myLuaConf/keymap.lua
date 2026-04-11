@@ -106,18 +106,12 @@ function M.setup_which_key()
   wk.add({
     { "<leader><leader>", group = "buffer commands" },
     { "<leader><leader>_", hidden = true },
-    { "<leader>c", group = "[c]ode" },
-    { "<leader>c_", hidden = true },
-    { "<leader>d", group = "[d]ocument" },
-    { "<leader>d_", hidden = true },
     { "<leader>f", group = "[f]ile" },
     { "<leader>f_", hidden = true },
     { "<leader>g", group = "[g]it" },
     { "<leader>g_", hidden = true },
     { "<leader>m", group = "[m]arkdown" },
     { "<leader>m_", hidden = true },
-    { "<leader>r", group = "[r]ename" },
-    { "<leader>r_", hidden = true },
     { "<leader>s", group = "[s]earch" },
     { "<leader>s_", hidden = true },
     { "<leader>t", group = "[t]oggles" },
@@ -145,40 +139,37 @@ function M.setup_lsp_keymaps(_, bufnr)
     vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
   end
 
-  nmap("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-  nmap("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
-
-  nmap("gd", vim.lsp.buf.definition, "[G]oto [D]efinition")
-
-  -- Telescope-enhanced LSP keymaps (capital last letter = telescope picker variant)
-  -- Lowercase gr* keymaps (grr, grn, gra, gri, grt, grx) are Neovim 0.12 built-in defaults
+  -- Telescope as default gr* navigation, gR* for native quickfix fallback
+  -- Native grn (rename), gra (code action), grx (codelens) are kept as-is
   if catUtils.enableForCategory("general.telescope", true) then
-    nmap("grR", function()
-      require("telescope.builtin").lsp_references()
-    end, "[G]oto [R]eferences (telescope)")
-    nmap("grI", function()
-      require("telescope.builtin").lsp_implementations()
-    end, "[G]oto [I]mplementation (telescope)")
-    nmap("grT", function()
-      require("telescope.builtin").lsp_type_definitions()
-    end, "[G]oto [T]ype definition (telescope)")
-    nmap("grD", function()
+    nmap("grd", function()
       require("telescope.builtin").lsp_definitions()
-    end, "[G]oto [D]efinition (telescope)")
+    end, "[G]oto [D]efinition")
+    nmap("grD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+    nmap("grt", function()
+      require("telescope.builtin").lsp_type_definitions()
+    end, "[G]oto [T]ype definition")
+    nmap("grr", function()
+      require("telescope.builtin").lsp_references()
+    end, "[G]oto [R]eferences")
+    nmap("gri", function()
+      require("telescope.builtin").lsp_implementations()
+    end, "[G]oto [I]mplementation")
     nmap("gO", function()
       require("telescope.builtin").lsp_document_symbols()
-    end, "Document symbols (telescope)")
+    end, "Document symbols")
     nmap("<leader>ws", function()
       require("telescope.builtin").lsp_dynamic_workspace_symbols()
-    end, "[W]orkspace [S]ymbols (telescope)")
+    end, "[W]orkspace [S]ymbols")
+    nmap("gRd", vim.lsp.buf.definition, "[G]oto [D]efinition (native)")
+    nmap("gRr", vim.lsp.buf.references, "[G]oto [R]eferences (native)")
+    nmap("gRi", vim.lsp.buf.implementation, "[G]oto [I]mplementation (native)")
+  else
+    nmap("grd", vim.lsp.buf.definition, "[G]oto [D]efinition")
   end
 
-  -- See `:help K` for why this keymap
   nmap("K", vim.lsp.buf.hover, "Hover Documentation")
   nmap("<C-S>", vim.lsp.buf.signature_help, "Signature Help")
-
-  -- Lesser used LSP functionality
-  nmap("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
   nmap("<leader>wa", vim.lsp.buf.add_workspace_folder, "[W]orkspace [A]dd Folder")
   nmap("<leader>wr", vim.lsp.buf.remove_workspace_folder, "[W]orkspace [R]emove Folder")
   nmap("<leader>wl", function()
@@ -554,12 +545,6 @@ function M.get_treesitter_keymaps()
   vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
   vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
 
-  local next_sentence, prev_sentence = ts_repeat_move.make_repeatable_move_pair(
-    function() vim.cmd("normal! )") end,
-    function() vim.cmd("normal! (") end
-  )
-  vim.keymap.set({ "n", "x", "o" }, "]s", next_sentence, { desc = "Next sentence" })
-  vim.keymap.set({ "n", "x", "o" }, "[s", prev_sentence, { desc = "Previous sentence" })
   return {
     incremental_selection = {
       enable = true,
