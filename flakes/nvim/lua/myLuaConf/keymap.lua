@@ -221,12 +221,23 @@ function M.setup_gitsigns_keymaps(bufnr)
     vim.keymap.set(mode, l, r, opts)
   end
 
-  -- Navigation
+  -- Navigation (repeatable with ; and , via treesitter-textobjects)
   local next_hunk_repeat, prev_hunk_repeat = gs.next_hunk, gs.prev_hunk
   local ok, ts_repeat_move = pcall(require, "nvim-treesitter-textobjects.repeatable_move")
   if ok then
-    next_hunk_repeat = ts_repeat_move.make_repeatable_move(gs.next_hunk)
-    prev_hunk_repeat = ts_repeat_move.make_repeatable_move(gs.prev_hunk)
+    local gs_move = ts_repeat_move.make_repeatable_move(function(opts)
+      if opts.forward then
+        gs.next_hunk()
+      else
+        gs.prev_hunk()
+      end
+    end)
+    next_hunk_repeat = function()
+      gs_move({ forward = true })
+    end
+    prev_hunk_repeat = function()
+      gs_move({ forward = false })
+    end
   end
 
   map({ "n", "v" }, "]g", function()
