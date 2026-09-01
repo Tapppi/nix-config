@@ -101,6 +101,12 @@ in
       home.file."Library/Fonts/.home-manager-fonts-version".enable = false;
       home.file."${home}/.cache/.keep".enable = false;
       home.file."${home}/.local/state/.keep".enable = false;
+
+      # The reference manpage is the only thing this host builds that trips the
+      # options.json string-context warning printed on every build-switch, and
+      # it is unreadable here anyway — nothing puts the per-user profile on
+      # manpath, so `man home-configuration.nix` finds no entry. See SYSMI-64.
+      manual.manpages.enable = false;
     };
   };
 
