@@ -140,13 +140,25 @@
           hammerspoon-lua = pkgs.runCommand "hammerspoon-lua-check"
             { nativeBuildInputs = [ pkgs.lua5_4 pkgs.stylua ]; } ''
             cp -r ${./modules/darwin/hammerspoon/lua} lua
+            cp -r ${./modules/darwin/hammerspoon/tests} tests
             cp ${./stylua.toml} stylua.toml
-            chmod -R u+w lua
+            chmod -R u+w lua tests
 
             # find, not a glob: subdirectories must be checked too.
-            find lua -name '*.lua' -print0 | xargs -0 -n1 luac -p
+            find lua tests -name '*.lua' -print0 | xargs -0 -n1 luac -p
 
-            stylua --check lua
+            stylua --check lua tests
+
+            # The Lua is symlinked out of the store, so no build ever loads it.
+            # This is the only thing that runs it: a stub `hs` exercises the
+            # profile matching, the launch argv and the picker sequencing.
+            # HOME is set because the modules derive the Local State paths from
+            # it, and the sandbox provides none.
+            HOME="$PWD/fakehome" lua \
+              -e "HARNESS='$PWD/tests/harness.lua'" \
+              -e "INITLUA='$PWD/lua/init.lua'" \
+              -e "package.path='$PWD/lua/?.lua;$PWD/tests/fixtures/?.lua;'..package.path" \
+              tests/spec.lua
 
             touch "$out"
           '';
