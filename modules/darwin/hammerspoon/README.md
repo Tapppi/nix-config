@@ -1,12 +1,13 @@
 # Hammerspoon
 
-Hammerspoon holds this Mac's window hotkeys and its per-app keyboard-layout forcing, and is where the link router that
-picks a browser *profile* for an opened URL will live.
+Hammerspoon holds this Mac's window hotkeys, its per-app keyboard-layout forcing, and the link router that picks a
+browser *profile* for an opened URL.
 
 ## Status
 
 **Implemented:** the packaged application, the move to `~/.config/hammerspoon`, home-manager placement, the generated
-`init.lua` stub, and the existing hotkeys and layout forcing.
+`init.lua` stub, the hotkeys and layout forcing — and the link router, the picker, `local.browsers.targets` with its
+generated `targets.lua`, and the per-profile hotkeys.
 
 The Lua was moved byte-for-byte, then reformatted for this repo and corrected for four latent bugs. A fifth fix — the
 focus filter's constructor — was reverted a commit later and remains open, because the two candidates fail in
@@ -26,10 +27,21 @@ did under `macos-setup`.
 write-only, so removing this module leaves `MJConfigFile` behind pointing at a file home-manager has deleted. All are
 tracked in SYSMI-63 — none is a regression from this work, and none is fixed here.
 
-**Not yet implemented**, and marked *(planned)* where they appear below: the link router and its
-`hs.urlevent.httpCallback`, the picker, `local.browsers.targets` and its generated `targets.lua`, and the per-profile
-hotkeys. Until they land, Hammerspoon is **not** the default HTTP handler and must not be made one — a config with no
-`httpCallback` drops every clicked link, as described under "The init.lua stub".
+**Hammerspoon is not yet the default HTTP handler, and must not be made one until the duplicate installation is
+resolved.** Two bundles carry the id `org.hammerspoon.Hammerspoon` — the Homebrew cask at `/Applications` and the nix
+one at `/Applications/Nix Apps` — and the login item still starts the cask. Which copy LaunchServices hands a link to
+is then not ours to choose. Measured: `hs.urlevent.openURLWithBundle(url, "org.hammerspoon.Hammerspoon")` returned
+`true` while the URL never reached the running nix instance; targeting by path delivered it. Removing the cask and
+repointing the login item is therefore a precondition of the cutover, not cleanup after it.
+
+**The picker's one unverified assumption** is that an `hs.hotkey.modal` captures plain letter keys while another
+application is frontmost — which a link click always implies. Modal bindings go through `RegisterEventHotKey`, the
+same mechanism as the hyper hotkeys that work globally every day, so this is very likely; but it is reasoning from
+mechanism, not evidence. It could not be tested synthetically: `hs.eventtap.keyStroke` reaches event taps but bypasses
+Carbon hotkey dispatch entirely, so a posted key proves nothing either way. It needs one real keypress.
+
+If that assumption is wrong the failure is benign and self-announcing rather than silent: the keys do nothing, and
+after `picker.timeout` seconds every link opens in the first target.
 
 Both the application and its configuration are delivered from here. That makes this the first piece of
 `tapppi/macos-setup` to move into `systems` complete rather than in halves, and the first user-level configuration this
@@ -123,7 +135,7 @@ Four properties of that default govern the layout:
 ~/.config/hammerspoon/          real directory, three independent entries
 ├── init.lua                    -> /nix/store/…   generated stub, never hand-edited
 ├── lua/                        -> <repo>/modules/darwin/hammerspoon/lua   out-of-store, live-editable
-├── generated/targets.lua       -> /nix/store/…   from local.browsers.targets   (planned)
+├── generated/targets.lua       -> /nix/store/…   from local.browsers.targets
 └── Spoons/                     created by Hammerspoon at every launch; unmanaged, harmless
 ```
 
@@ -156,8 +168,6 @@ the modules can require each other by bare name and a module can be a directory;
 precondition.
 
 ## The init.lua stub
-
-*(The `httpCallback` registration described as step 1 below is planned, not yet present.)*
 
 Generated, and syntax-checked at build time with **`pkgs.lua5_4`'s `luac -p`** — not `pkgs.lua`, which is still
 5.2.4 in the pinned nixpkgs, while Hammerspoon embeds Lua 5.4.7. A 5.2 gate would reject valid 5.3+ syntax (`//`,
@@ -202,7 +212,7 @@ That degradation is a **requirement on the stub, not an emergent property of the
 per click and the link dropped anyway. So the registered callback must itself wrap its dispatch in `pcall` and carry a
 hard-coded `hs.urlevent.openURLWithBundle` fallback that depends on nothing outside the stub.
 
-## Profile targeting *(planned)*
+## Profile targeting
 
 Two decisions settle why this lives here rather than in a dedicated router.
 
@@ -243,13 +253,79 @@ That trailing name is `profiles::GetAvatarNameForProfile()` → `ProfileAttribut
 the title ends in `)` and a plain suffix test against the Local State name matches nothing — verified against this
 machine's live Chrome windows, where it was false for all three profiles. Match the tail against **both** forms,
 `<name>` and `… (<name>)`. Never a bare suffix and never an unanchored substring: `" - "` also occurs inside the page
-title, and the separator is localized (en dash in de/fr/fi, `$1 ($2)` in ru, `$1: $2` in pt-BR). An enterprise-managed
-profile substitutes its enterprise label for the name, so treat a tail miss as **unknown**, never as "wrong window".
+title, and the separator is localized (en dash in de/fr/fi, `$1 ($2)` in ru, `$1: $2` in pt-BR).
+
+**A tail miss means "not identified", and an unidentified window is not claimed — as long as the profile list could be
+read at all.** That qualifier is load-bearing. Profile names are read from `Local State`, and this config only knows
+where to find that file for Chrome, Brave, Edge and Vivaldi; for any other bundle it cannot tell one profile's windows
+from another's, so it claims all of them and says so once on the console. Two targets sharing such a bundle would fight
+over one window. Adding a browser means adding its `Local State` path in `browsers.lua`, and nothing in the nix option
+checks that you did.
+
+Where the list *is* readable, not claiming is the safe direction — claiming the wrong window would put a client's links
+in front of the wrong profile — but it is not free.
+An enterprise-managed profile substitutes its enterprise label for the `Local State` name, so its windows match no tail
+at all; the hotkey then finds nothing to focus and launches, which opens a *new* window rather than raising the
+existing one. Repeated presses repeat that. If a profile ever behaves that way, its label is the thing to check
+first. Tracked in SYSMI-63 rather than guessed at here, since no profile on this machine currently does it.
 
 Two conditions gate the profile name appearing at all: the profile manager must know more than one profile
 (`GetNumberOfProfiles() > 1` — Brave has one today, so its windows carry none) and the profile must not be
-off-the-record, since Incognito and Guest take earlier branches appending `(Incognito)`/`(Guest)`. Treat "no profile
-name" as "the default profile", not as an error.
+off-the-record, since Incognito and Guest take earlier branches appending `(Incognito)`/`(Guest)`.
+
+**"No profile name" therefore cannot simply mean "the default profile".** An automation copy of Chrome — the
+`chrome-devtools-mcp` one that runs on this machine — reports the same bundle id from the same bundle path, but runs
+under its own `--user-data-dir`, so its windows carry no profile suffix either. Three such Chrome processes were
+running when this was measured. The rule that works is to read the *configured* browser's `Local State`: a browser
+that knows more than one profile appends a name to every eligible window, so a bare title there is **unknown**, while
+a browser that knows only one appends nothing and every window is its. That is also why window lookup iterates
+`hs.application.applicationsForBundleID` rather than `hs.application.get`, which returns only one of the processes.
+
+## The picker
+
+`hs.hotkey.modal`, not `hs.chooser`, for two independent reasons. A chooser cannot commit on a single keypress — it is
+a query field, so a choice costs typing plus Return. And it **takes** focus: `chooser.lua` installs a default global
+callback that stores `window.frontmostWindow()` on `willOpen` and calls `:focus()` on it again at `didClose`, which is
+machinery that only exists because opening one steals focus in the first place.
+
+Taking focus is the disqualifying half. A link is clicked from inside some other application, and pulling focus out of
+it to ask a question is exactly what this is meant to avoid. A modal binds real hotkeys instead, so the choice is made
+while the clicking application still holds focus.
+
+The danger is the mirror of the usefulness. While the modal is entered it swallows its keys from every application, so
+a modal left entered would make those letters untypeable machine-wide. Every path out of `picker.lua` exits it, and a
+timer guarantees an exit even if none of them run — the timer is armed *before* the modal is entered, so it cannot
+outlive it.
+
+Two behaviours are choices rather than consequences, and either could reasonably be the other:
+
+- **A second link while the picker is up joins a queue**, and one choice then opens all of them. Clicking several
+  links in a burst is what this serves. The alternative silently drops every link but one.
+- **The timeout routes to the first target rather than dropping the link.** A dropped link is invisible and leaves the
+  user with nothing; reorder `local.browsers.targets` to change which target that is.
+
+### Two limits worth knowing before debugging one of them
+
+**Window lookup only sees the current Mission Control Space.** `app:allWindows()` is documented as returning only
+windows in the current Space, and this config does not use `hs.window.filter`, which is the documented way around it.
+So a browser window that is fullscreen or on another Space is invisible to the hotkey: it finds nothing, launches, and
+you get a duplicate window on the current Space. It is self-correcting — the next press finds that new window — and it
+does not affect link routing, which always goes through `open`.
+
+**The stub's crash fallback cannot carry a profile.** `openURLWithBundle` takes a bundle id and nothing else, so when
+the router itself fails the link opens in whichever profile of that browser was last used. That is the price of a
+fallback that depends on nothing outside the generated stub, and it is the right trade: a link in the wrong profile is
+recoverable, a link that goes nowhere is not.
+
+## Testing
+
+`nix flake check` parses every Lua file with the Lua 5.4 `luac -p` that matches the interpreter Hammerspoon embeds,
+holds it to `stylua.toml`, and then **runs** it. That last part matters more than it looks: the hand-written Lua is
+symlinked out of the store, so no build ever loads it, and nothing else would catch a file that parses but cannot run.
+
+`tests/harness.lua` is a stub `hs` — not a simulator. It covers the decisions that are pure: which window belongs to
+which profile, what argv a launch produces, and how the picker sequences. Anything needing real key capture or a real
+window server has to be tested on the machine, and the modal question above is exactly that.
 
 ## The `~/.hammerspoon` deletion is load-bearing
 
