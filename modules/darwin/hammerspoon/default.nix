@@ -16,6 +16,14 @@ let
   # Read here, where `config` is still the darwin config — inside
   # home-manager.users.<name> it is shadowed by home-manager's own.
   luaDir = config.local.hammerspoon.luaDir;
+  browsers = config.local.browsers.targets;
+
+  # Baked into the stub's fallback so it depends on nothing loaded at runtime.
+  # Escaped like every other option-derived value: unescaped it would be the one
+  # interpolation that could break the generated Lua with no trace back here.
+  # Safari only if no target is configured at all — it is the macOS default and
+  # is always present.
+  fallbackBundle = if browsers == [ ] then "com.apple.Safari" else (builtins.head browsers).bundle;
 
   # The bundle is rsynced to a stable path by nix-darwin's applications
   # activation; the store path is not a usable launch target.
@@ -34,12 +42,76 @@ let
       cp candidate.lua "$out"
     '';
 
+  # Lua strings are byte strings, so UTF-8 passes through untouched; only the
+  # delimiters and the control characters need escaping.
+  luaStr =
+    s:
+    ''"'' + builtins.replaceStrings [ "\\" "\"" "\n" "\r" "\t" ] [ "\\\\" "\\\"" "\\n" "\\r" "\\t" ] s + ''"'';
+
+  # One source of truth for the picker rows and the per-profile hotkeys, so the
+  # two cannot drift. An absent profileDir omits the key rather than writing nil.
+  # Assembled line by line rather than interpolated into a multi-line string: the
+  # generated file is what someone reads when the picker misbehaves, so its
+  # indentation should not depend on how nix strips a here-doc.
+  targetsLua =
+    let
+      field = name: value: "    ${name} = ${luaStr value},";
+      entry =
+        t:
+        lib.concatStringsSep "\n" (
+          [
+            "  {"
+            (field "key" t.key)
+            (field "label" t.label)
+            (field "bundle" t.bundle)
+          ]
+          ++ lib.optional (t.profileDir != null) (field "profileDir" t.profileDir)
+          ++ [ "  }," ]
+        );
+    in
+    checkedLua "hammerspoon-targets.lua" (
+      lib.concatStringsSep "\n" (
+        [
+          "-- Managed by systems/modules/darwin/hammerspoon, generated from"
+          "-- local.browsers.targets. Edits here are replaced on the next build-switch."
+          "return {"
+        ]
+        ++ map entry browsers
+        ++ [
+          "}"
+          ""
+        ]
+      )
+    );
+
   # Generated, and kept deliberately small: everything that can fail is loaded
   # through pcall from here, so a syntax error in a hand-edited module cannot
   # stop the parts that must always run.
   initLua = checkedLua "hammerspoon-init.lua" ''
     -- Managed by systems/modules/darwin/hammerspoon. Edits here are replaced
     -- on the next build-switch; hand-edited config lives in lua/.
+
+    -- FIRST, before anything that can fail. With no httpCallback registered
+    -- Hammerspoon does not forward the URL anywhere — it logs "no http callback
+    -- has been set" and drops the event. Once it is the default handler that is
+    -- every clicked link on the machine.
+    --
+    -- The load-time pcall further down cannot help here: it would not catch a
+    -- callback that dispatches into a module which failed to load, since that
+    -- error is raised per click. So this carries its own pcall and its own
+    -- hard-coded fallback, depending on nothing outside this file.
+    hs.urlevent.httpCallback = function(scheme, host, params, fullURL, senderPID)
+      local dispatched, err = pcall(function()
+        require("lua.router").dispatch(scheme, host, params, fullURL, senderPID)
+      end)
+      if not dispatched then
+        print("hammerspoon: router failed, falling back: " .. tostring(err))
+        -- pcall because openURLWithBundle raises on a non-string argument
+        -- rather than returning false, and its boolean only reports that
+        -- LaunchServices opened the bundle.
+        pcall(hs.urlevent.openURLWithBundle, fullURL, ${luaStr fallbackBundle})
+      end
+    end
 
     -- Required for `hs -c`, which activation uses to reload. Opens an
     -- unauthenticated Mach port to anything running as this user — see
@@ -119,7 +191,75 @@ in
     '';
   };
 
+  options.local.browsers.targets = lib.mkOption {
+    type = lib.types.listOf (
+      lib.types.submodule {
+        options = {
+          key = lib.mkOption {
+            type = lib.types.strMatching "[a-z0-9]";
+            description = "Picker key and hyper hotkey. One character, so a choice is one keypress.";
+          };
+          label = lib.mkOption {
+            type = lib.types.str;
+            description = ''
+              Row text in the picker. Deliberately generic: this repo is public, so a
+              client's name must not appear here. Real display names are read from the
+              browser's Local State at runtime instead.
+            '';
+          };
+          bundle = lib.mkOption {
+            type = lib.types.str;
+            description = "Bundle id of the browser to launch.";
+          };
+          profileDir = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = ''
+              On-disk profile directory — "Profile 1", never the display name. null for a
+              browser launched without --profile-directory at all.
+            '';
+          };
+        };
+      }
+    );
+    default = [
+      {
+        key = "b";
+        label = "Personal";
+        bundle = "com.brave.Browser";
+        profileDir = "Default";
+      }
+      {
+        key = "v";
+        label = "Company";
+        bundle = "com.google.Chrome";
+        profileDir = "Profile 1";
+      }
+      {
+        key = "c";
+        label = "Client";
+        bundle = "com.google.Chrome";
+        profileDir = "Profile 2";
+      }
+    ];
+    description = ''
+      Browser profiles an opened link can be routed to, in picker order.
+
+      Generates both the picker and the hyper hotkeys. Keys must not collide with
+      each other or with the app hotkeys bound in lua/init.lua.
+    '';
+  };
+
   config = {
+    # A duplicate key is silent at runtime: the second hs.hotkey.bind wins and the
+    # first target becomes unreachable, with the picker still offering both rows.
+    assertions = [
+      {
+        assertion = lib.length (lib.unique (map (t: t.key) browsers)) == lib.length browsers;
+        message = "local.browsers.targets: duplicate key. Each key binds one hotkey and one picker row.";
+      }
+    ];
+
     # Must be systemPackages, not home.packages: the TCC argument in README.md
     # rests on nix-darwin rsyncing the bundle into /Applications/Nix Apps, and
     # that activation reads environment.systemPackages only. home-manager's own
@@ -141,6 +281,7 @@ in
 
     home-manager.users.${user} = { config, ... }: {
       home.file.".config/hammerspoon/init.lua".source = initLua;
+      home.file.".config/hammerspoon/generated/targets.lua".source = targetsLua;
 
       # Out of store so edits apply without a rebuild. A deliberate exception:
       # store-managed content is the point everywhere else.
@@ -167,14 +308,21 @@ in
           /bin/launchctl asuser "$hsUid" /usr/bin/sudo -u ${user} --set-home "$@"
         }
 
-        # -a so a missing instance fails instead of prompting invisibly.
+        # -a is load-bearing: with no instance running, `hs` otherwise puts up a
+        # Launch/Cancel alert, and under launchctl/sudo nothing can answer it —
+        # activation would hang on a modal nobody sees. `hs -h` does not list
+        # the flag, but hs.man documents it: "If Hammerspoon is not currently
+        # running, exit with EX_TEMPFAIL rather than prompt the user." Its
+        # opposite is -A, which launches instead of prompting; the print-cloning
+        # flag people confuse it with is -C. -t bounds the send/receive wait,
+        # which the CLI otherwise defaults to 4s.
         #
         # A failed probe counts as a mismatch: on the first switch the running
         # instance predates hs.ipc and cannot answer at all.
-        have="$(asUser ${hammerspoon}/bin/hs -a -c 'print(hs.configdir)' 2>/dev/null || true)"
+        have="$(asUser ${hammerspoon}/bin/hs -a -t 5 -c 'print(hs.configdir)' 2>/dev/null || true)"
 
         if [ "$have" = '${cfgDir}' ]; then
-          asUser ${hammerspoon}/bin/hs -a -c 'hs.reload()' >/dev/null 2>&1 || true
+          asUser ${hammerspoon}/bin/hs -a -t 5 -c 'hs.reload()' >/dev/null 2>&1 || true
         else
           # Verified rather than assumed: shutdown handlers can outlast a
           # fixed sleep, and `open -a` on a live instance only activates it.
@@ -194,7 +342,12 @@ in
             now=""
             for _ in 1 2 3 4 5 6 7 8 9 10; do
               /bin/sleep 1
-              now="$(asUser ${hammerspoon}/bin/hs -a -c 'print(hs.configdir)' 2>/dev/null || true)"
+              # This loop is waiting for an instance to appear, so it is the
+              # one place that genuinely runs with none. -a makes `hs` exit
+              # rather than prompt; the pgrep is belt and braces, and also
+              # avoids a pointless port attempt on every iteration.
+              /usr/bin/pgrep -qx Hammerspoon >/dev/null 2>&1 || continue
+              now="$(asUser ${hammerspoon}/bin/hs -a -t 5 -c 'print(hs.configdir)' 2>/dev/null || true)"
               [ "$now" = '${cfgDir}' ] && break
             done
 

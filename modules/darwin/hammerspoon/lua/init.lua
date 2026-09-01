@@ -1,4 +1,6 @@
 local whu = require("window-hotkey-utils")
+local browsers = require("browsers")
+local picker = require("picker")
 
 -- ─── Per-app US keyboard layout forcing ────────────────────────────
 -- Forces US layout when these apps gain focus, restores on blur.
@@ -94,12 +96,6 @@ whu.bindToggle("s", "com.mitchellh.ghostty", whu.sidebar("left", 0.6), {
   watchCreate = true,
 })
 
--- Brave (hyper+b)
-whu.bindToggle("b", "com.brave.Browser", whu.sidebar("right", 0.4))
-
--- Safari (hyper+v)
-whu.bindToggle("v", "com.apple.Safari", whu.sidebar("right", 0.4))
-
 -- Slack (hyper+k)
 whu.bindToggle("k", "com.tinyspeck.slackmacgap", chatLayout)
 
@@ -109,8 +105,9 @@ whu.bindToggle("i", "com.microsoft.teams2", chatLayout)
 -- Finder (hyper+f)
 whu.bindToggle("f", "com.apple.finder", whu.corner("topleft", 800, 600, 10))
 
--- Calendar (hyper+c) — no resize, just center on active screen
-whu.bindToggle("c", "com.apple.iCal", whu.center())
+-- Calendar (hyper+x) — no resize, just center on active screen.
+-- Moved off c, which now belongs to a browser profile.
+whu.bindToggle("x", "com.apple.iCal", whu.center())
 
 -- Obsidian (hyper+j) — US layout via forceUSApps
 whu.bindToggle("j", "md.obsidian", whu.sidebar("right", 0.4), {
@@ -125,3 +122,22 @@ whu.bindToggle("d", "com.hnc.Discord", chatLayout)
 
 -- Windows App / RDP (hyper+z) — toggle/focus only, never resize
 whu.bindToggle("z", "com.microsoft.rdc.macos", nil)
+
+-- ─── Browser profiles ──────────────────────────────────────────────
+-- Keys, labels and profiles all come from local.browsers.targets, so the
+-- hotkeys and the picker rows cannot disagree about what exists.
+--
+-- These bind AFTER the app hotkeys above: hs.hotkey lets a later bind win, so
+-- a key claimed by both would silently resolve to the browser. The nix option
+-- asserts the targets do not collide with each other; it cannot see this file,
+-- so keeping the two sets disjoint is a matter of reading them together.
+
+local browserLayout = whu.sidebar("right", 0.4)
+
+for _, target in ipairs(browsers.targets) do
+  hs.hotkey.bind(whu.hyper, target.key, function()
+    browsers.toggle(target, browserLayout)
+  end)
+end
+
+picker.setup()
