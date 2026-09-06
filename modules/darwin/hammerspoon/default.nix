@@ -29,6 +29,12 @@ let
   # activation; the store path is not a usable launch target.
   appPath = "/Applications/Nix Apps/Hammerspoon.app";
 
+  # Where the Homebrew cask puts its copy. Both carry the same bundle id, which
+  # is why its presence blocks the handler claim below.
+  cask = "/Applications/Hammerspoon.app";
+
+  bundleId = "org.hammerspoon.Hammerspoon";
+
   # lua5_4 to match the interpreter the app embeds; pkgs.lua is still 5.2.
   checkedLua = name: text:
     pkgs.runCommand name
@@ -250,6 +256,27 @@ in
     '';
   };
 
+  options.local.browsers.claimDefaultHandler = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = ''
+      Make Hammerspoon the system handler for http and https on activation, so
+      clicked links reach the router.
+
+      Claiming it is deliberately conditional, and both conditions matter.
+
+      macOS shows a confirmation prompt the first time the http/https handler
+      changes, so this only calls out when the handler is not already ours —
+      otherwise every activation would raise a dialog.
+
+      It also refuses while a second bundle claiming `org.hammerspoon.Hammerspoon`
+      is installed. Two bundles share that id until the Homebrew cask is gone,
+      and LaunchServices then picks which copy receives a link — measured, not
+      theoretical. That makes removing the cask a precondition of this rather
+      than cleanup after it, and this guard is what enforces the order.
+    '';
+  };
+
   config = {
     # A duplicate key is silent at runtime: the second hs.hotkey.bind wins and the
     # first target becomes unreachable, with the picker still offering both rows.
@@ -289,8 +316,9 @@ in
         config.lib.file.mkOutOfStoreSymlink luaDir;
     };
 
-    system.activationScripts.postActivation.text = lib.mkAfter ''
-      echo "configuring Hammerspoon" >&2
+    system.activationScripts.postActivation.text = lib.mkAfter (
+      ''
+        echo "configuring Hammerspoon" >&2
 
       if [ -n "''${DRY_RUN:-}" ] || /bin/ps -o args= -p "$PPID" 2>/dev/null | /usr/bin/grep -q -- ' --dry-run'; then
         # darwin-rebuild runs activate even for --dry-run. The env check keeps
@@ -357,11 +385,39 @@ in
           fi
         fi
       else
-        # Nothing to restart. The login item still points at the Homebrew
-        # bundle; both share a bundle id and so read the same config. Phase 3
-        # removes the cask and takes over launching.
+        # Nothing to restart. Until the cask is removed the login item still
+        # points at it; both share a bundle id and so read the same config.
         echo "  hammerspoon: not running; start ${appPath} to pick up the new config." >&2
       fi
-    '';
+      ''
+      + lib.optionalString config.local.browsers.claimDefaultHandler ''
+
+      if [ -n "''${DRY_RUN:-}" ] || /bin/ps -o args= -p "$PPID" 2>/dev/null | /usr/bin/grep -q -- ' --dry-run'; then
+        :
+      elif [ -e ${lib.escapeShellArg cask} ]; then
+        # The Homebrew cask is still installed and shares this bundle id, so
+        # LaunchServices — not this config — would decide which copy receives a
+        # link. Removing it is a precondition, not cleanup.
+        echo "  hammerspoon: not claiming the http handler; ${cask} is still installed." >&2
+      elif ! /usr/bin/pgrep -qx Hammerspoon >/dev/null 2>&1; then
+        echo "  hammerspoon: not running; cannot claim the http handler." >&2
+      else
+        hsUid2="$(/usr/bin/id -u ${user})"
+        # Only when it is not already ours: macOS raises a confirmation dialog
+        # on every real change, and activation is a poor place to raise one
+        # repeatedly.
+        /bin/launchctl asuser "$hsUid2" /usr/bin/sudo -u ${user} --set-home           ${hammerspoon}/bin/hs -a -t 10 -c '
+            local claimed = 0
+            for _, scheme in ipairs({ "http", "https" }) do
+              if hs.urlevent.getDefaultHandler(scheme) ~= "${bundleId}" then
+                hs.urlevent.setDefaultHandler(scheme)
+                claimed = claimed + 1
+              end
+            end
+            print(claimed)
+            ' </dev/null >/dev/null 2>&1 || true
+        fi
+      ''
+    );
   };
 }
