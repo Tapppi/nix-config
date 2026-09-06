@@ -30,11 +30,11 @@ let
 
   bundleId = "org.hammerspoon.Hammerspoon";
 
-  # Types Hammerspoon claims that are not web content. Web types are excluded
-  # deliberately: on macOS they ARE the default-browser identity, so moving one
-  # away raises "change your default web browser?" and accepting it would undo
-  # the claim. They also need no undoing — a web file opened into Hammerspoon
-  # arrives as a file:// URL and reaches the picker like any other link.
+  # What Hammerspoon claims but cannot route. Web types are excluded: they are
+  # the default-browser identity on macOS, so moving one away asks to change the
+  # browser back, and they reach the picker as file:// URLs anyway. A .url is a
+  # shortcut file rather than web content — the picker hands the browser the
+  # file instead of following the link inside it.
   restorableExts = "txt text url";
 
   # lua5_4 to match the interpreter the app embeds; pkgs.lua is still 5.2.
