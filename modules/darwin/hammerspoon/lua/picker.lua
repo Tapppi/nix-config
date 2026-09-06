@@ -1,14 +1,10 @@
 -- The link picker: one keypress chooses which browser profile opens a URL.
 --
--- hs.hotkey.modal rather than hs.chooser. A chooser cannot commit on a single
--- keypress, and it TAKES focus — which is the disqualifying half, since a link
--- is clicked from inside another application. A modal binds real hotkeys, so
--- the choice is made while that application still holds focus.
+-- hs.hotkey.modal rather than hs.chooser, which takes focus — unusable when the
+-- link was clicked from inside another application.
 --
--- The danger of a modal is the mirror of its usefulness: while entered, it
--- swallows its keys from every application. A modal left entered would make
--- those letters untypeable machine-wide, so every path out of here exits it,
--- and a timer guarantees an exit even if none of them run.
+-- While entered, a modal swallows its keys from every application, so every
+-- path out exits it and a timer guarantees an exit if none of them run.
 
 local M = {}
 
@@ -72,31 +68,23 @@ end
 
 --- Offer the targets for a URL.
 ---
---- A second link arriving while the picker is up joins the queue rather than
---- replacing it or opening a second picker: one choice then opens all of them.
---- Clicking several links in a burst is the case this serves; the alternative
---- would silently drop every link but one.
+--- A second link joins the queue rather than replacing it, so a burst of clicks
+--- opens all of them rather than all but one.
 function M.present(url)
-  -- With no targets there is nothing to offer and the timeout below would
-  -- discard the link without opening anything. Raising instead hands it to the
-  -- stub's hard-coded fallback, which is the whole point of that fallback.
-  -- Reachable in practice: generated/targets.lua is placed by build-switch,
-  -- but the hand-edited tree hot-reloads on any write, so merging this branch
-  -- loads the picker before the generated file exists.
+  -- With no targets the timeout would discard the link. Raising hands it to
+  -- the stub's fallback instead.
   if #browsers.targets == 0 then
     error("no browser targets configured", 0)
   end
 
-  -- Idempotent, and called here as well as from init.lua: a link can arrive
-  -- through the stub's callback even when the hand-edited config failed to
+  -- A link can arrive through the stub's callback even when init.lua failed to
   -- load, and an unbound modal would throw on every click.
   M.setup()
 
   state.queue[#state.queue + 1] = url
 
-  -- Reopening rather than returning early, so the queue count is visible. The
-  -- timer is deliberately NOT restarted: the first link's clock governs, or a
-  -- steady trickle of links could hold the keyboard indefinitely.
+  -- Reopened so the queue count is visible. The timer is not restarted, or a
+  -- trickle of links would hold the keyboard indefinitely.
   local reopening = state.alert ~= nil
   if reopening then
     hs.alert.closeSpecific(state.alert)
@@ -116,11 +104,9 @@ function M.present(url)
 
   -- Outlive the timeout, so the modal is never entered with nothing on screen
   -- to explain why the keyboard is behaving oddly.
-  -- The screen argument is deliberately omitted rather than passed. hs.alert
-  -- scans its optional arguments with ipairs, so a nil there would truncate the
-  -- scan and silently drop the duration back to the 2s default — the alert would
-  -- vanish while the modal still held the keyboard for the full timeout. It
-  -- defaults to the main screen internally anyway.
+  -- No screen argument: hs.alert scans optional arguments with ipairs, so a nil
+  -- would truncate the scan and drop the duration to 2s while the modal held
+  -- the keyboard for the full timeout.
   state.alert = hs.alert.show(table.concat(rows, "\n"), {
     textSize = 18,
     radius = 8,
@@ -141,9 +127,8 @@ function M.present(url)
     end
   end)
 
-  -- If entering fails, the armed timer would still fire and open the link a
-  -- second time, on top of whatever the stub's fallback already did. Tear the
-  -- whole thing down first, then let the caller's pcall see the error.
+  -- Otherwise the armed timer still fires and opens the link a second time, on
+  -- top of whatever the stub's fallback already did.
   local entered, err = pcall(function()
     state.modal:enter()
   end)
