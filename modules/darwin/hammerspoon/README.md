@@ -27,21 +27,29 @@ did under `macos-setup`.
 write-only, so removing this module leaves `MJConfigFile` behind pointing at a file home-manager has deleted. All are
 tracked in SYSMI-63 — none is a regression from this work, and none is fixed here.
 
-**Hammerspoon is not yet the default HTTP handler, and must not be made one until the duplicate installation is
-resolved.** Two bundles carry the id `org.hammerspoon.Hammerspoon` — the Homebrew cask at `/Applications` and the nix
-one at `/Applications/Nix Apps` — and the login item still starts the cask. Which copy LaunchServices hands a link to
-is then not ours to choose. Measured: `hs.urlevent.openURLWithBundle(url, "org.hammerspoon.Hammerspoon")` returned
-`true` while the URL never reached the running nix instance; targeting by path delivered it. Removing the cask and
-repointing the login item is therefore a precondition of the cutover, not cleanup after it.
+**Activation claims the http/https handler, but only once the duplicate installation is gone.** Two bundles carry the
+id `org.hammerspoon.Hammerspoon` — the Homebrew cask at `/Applications` and the nix one at `/Applications/Nix Apps` —
+and while both exist, which copy LaunchServices hands a link to is not ours to choose. Measured:
+`hs.urlevent.openURLWithBundle(url, "org.hammerspoon.Hammerspoon")` returned `true` while the URL never reached the
+running nix instance; targeting by path delivered it.
 
-**The picker's one unverified assumption** is that an `hs.hotkey.modal` captures plain letter keys while another
-application is frontmost — which a link click always implies. Modal bindings go through `RegisterEventHotKey`, the
-same mechanism as the hyper hotkeys that work globally every day, so this is very likely; but it is reasoning from
-mechanism, not evidence. It could not be tested synthetically: `hs.eventtap.keyStroke` reaches event taps but bypasses
-Carbon hotkey dispatch entirely, so a posted key proves nothing either way. It needs one real keypress.
+So `local.browsers.claimDefaultHandler` refuses while `/Applications/Hammerspoon.app` exists, and says so. That makes
+removing the cask a precondition rather than cleanup, and makes the ordering self-enforcing instead of a note someone
+has to remember. It is also idempotent: macOS raises a confirmation dialog on every real change of the http handler,
+so it only calls out when the handler is not already Hammerspoon's.
 
-If that assumption is wrong the failure is benign and self-announcing rather than silent: the keys do nothing, and
-after `picker.timeout` seconds every link opens in the first target.
+**The picker's central assumption is now measured, not assumed.** A modal binding on a plain letter *does* fire while
+another application is frontmost, which a link click always implies. Verified on this machine: with Brave frontmost
+and Hammerspoon not, a modal bound to a bare `y` recorded a hit.
+
+Getting that answer needed the right instrument, and the wrong one is misleading rather than inconclusive.
+`hs.eventtap.keyStroke` reaches event taps but bypasses Carbon hotkey dispatch, so every "the modal did not fire"
+result it produces is an artefact. Posting the key at `kCGHIDEventTap` — below the point where Carbon claims it — is
+what settles it.
+
+What is *not* separately measured is that the modal swallows the key from the frontmost application. That is standard
+`RegisterEventHotKey` behaviour and is what makes the picker usable; if it were wrong, the cost is a stray character
+typed into whatever had focus.
 
 Both the application and its configuration are delivered from here. That makes this the first piece of
 `tapppi/macos-setup` to move into `systems` complete rather than in halves, and the first user-level configuration this
