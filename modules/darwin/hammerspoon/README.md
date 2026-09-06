@@ -5,55 +5,32 @@ browser *profile* for an opened URL.
 
 ## Status
 
-**Implemented:** the packaged application, the move to `~/.config/hammerspoon`, home-manager placement, the generated
-`init.lua` stub, the hotkeys and layout forcing — and the link router, the picker, `local.browsers.targets` with its
-generated `targets.lua`, and the per-profile hotkeys.
+Hammerspoon, its configuration, the link router, the picker and the hotkeys are all delivered from here. Activation
+claims the `http`/`https` handler, so a clicked link reaches the router.
 
-The Lua was moved byte-for-byte, then reformatted for this repo and corrected for four latent bugs. A fifth fix — the
-focus filter's constructor — was reverted a commit later and remains open, because the two candidates fail in
-opposite directions: `hs.window.filter.new(nil)` copies the default filter, which never fires for
-`ignoreInDefaultFilter` apps or non-standard window roles, so focusing one can leave the keyboard stuck in the forced
-US layout; `new(true)` drops the default entirely, including its `visible=true` rule, so Spotlight and Notification
-Center begin firing `windowFocused` and — not being in `forceUSApps` — restore Finnish while a terminal session is
-the working context. `new(nil)` is what ships. Neither symptom has been observed on the machine, which is what makes
-it a question rather than a bug. So it is *not* unchanged: re-read it rather than assuming it behaves as it
-did under `macos-setup`.
+`local.browsers.claimDefaultHandler` still refuses while `/Applications/Hammerspoon.app` exists. That path is empty
+now, but the guard stays: two bundles sharing `org.hammerspoon.Hammerspoon` let LaunchServices decide which copy
+receives a link, and reinstalling the cask would silently reintroduce that. It is also idempotent, because macOS
+raises a confirmation dialog on every real change of the http handler.
 
-**Known defects, deliberately left:** the input source is set synchronously right after `win:focus()`, so the async
+**Known defects, deliberately left.** The input source is set synchronously right after `win:focus()`, so the async
 `windowFocused` handler never records the previous layout; the layout is also set immediately after
 `launchOrFocusByBundleID`, changing the keyboard under the app still holding focus; the 0.05s retry timer in
 `setInputSource` is unreferenced, so it is both collectable and un-cancellable; `win:setFrame()` runs before
-`app:unhide()` in the toggle path, with unverified effect on a hidden window; and `CustomUserPreferences` is
-write-only, so removing this module leaves `MJConfigFile` behind pointing at a file home-manager has deleted. All are
-tracked in SYSMI-63 — none is a regression from this work, and none is fixed here.
+`app:unhide()` in `bindToggle`, with unverified effect on a hidden window; and `CustomUserPreferences` is write-only,
+so removing this module leaves `MJConfigFile` pointing at a file home-manager has deleted. All tracked in SYSMI-63.
 
-**Activation claims the http/https handler, but only once the duplicate installation is gone.** Two bundles carry the
-id `org.hammerspoon.Hammerspoon` — the Homebrew cask at `/Applications` and the nix one at `/Applications/Nix Apps` —
-and while both exist, which copy LaunchServices hands a link to is not ours to choose. Measured:
-`hs.urlevent.openURLWithBundle(url, "org.hammerspoon.Hammerspoon")` returned `true` while the URL never reached the
-running nix instance; targeting by path delivered it.
+**One open question in code that shipped.** The focus filter's constructor has two candidates that fail in opposite
+directions: `hs.window.filter.new(nil)` copies the default filter, which never fires for `ignoreInDefaultFilter` apps
+or non-standard window roles, so focusing one can leave the keyboard stuck in the forced US layout; `new(true)` drops
+the default entirely, including its `visible=true` rule, so Spotlight and Notification Center begin firing
+`windowFocused` and restore Finnish mid-session. `new(nil)` ships. Neither symptom has been observed, which is what
+makes it a question rather than a bug.
 
-So `local.browsers.claimDefaultHandler` refuses while `/Applications/Hammerspoon.app` exists, and says so. That makes
-removing the cask a precondition rather than cleanup, and makes the ordering self-enforcing instead of a note someone
-has to remember. It is also idempotent: macOS raises a confirmation dialog on every real change of the http handler,
-so it only calls out when the handler is not already Hammerspoon's.
-
-**The picker's central assumption is now measured, not assumed.** A modal binding on a plain letter *does* fire while
-another application is frontmost, which a link click always implies. Verified on this machine: with Brave frontmost
-and Hammerspoon not, a modal bound to a bare `y` recorded a hit.
-
-Getting that answer needed the right instrument, and the wrong one is misleading rather than inconclusive.
-`hs.eventtap.keyStroke` reaches event taps but bypasses Carbon hotkey dispatch, so every "the modal did not fire"
-result it produces is an artefact. Posting the key at `kCGHIDEventTap` — below the point where Carbon claims it — is
-what settles it.
-
-What is *not* separately measured is that the modal swallows the key from the frontmost application. That is standard
-`RegisterEventHotKey` behaviour and is what makes the picker usable; if it were wrong, the cost is a stray character
-typed into whatever had focus.
-
-Both the application and its configuration are delivered from here. That makes this the first piece of
-`tapppi/macos-setup` to move into `systems` complete rather than in halves, and the first user-level configuration this
-repo places through home-manager. Tracked as SYSMI-63.
+**A modal does capture plain letters while another application is frontmost** — measured, with Brave frontmost and
+Hammerspoon not. Worth recording because the obvious instrument lies: `hs.eventtap.keyStroke` reaches event taps but
+bypasses Carbon hotkey dispatch, so a posted key proves nothing. Post at `kCGHIDEventTap` instead. That the modal also
+*swallows* the key is standard `RegisterEventHotKey` behaviour and was not separately measured.
 
 Every non-obvious claim below was verified against primary sources — Chromium and Hammerspoon source at the exact
 installed versions, this machine's TCC database, and the pinned nix-darwin revision. Where something is asserted
@@ -61,45 +38,29 @@ sharply, it is because it was checked; where it is hedged, the hedge is the find
 
 ## Why the app is packaged here rather than left to Homebrew
 
-Hammerspoon is not in nixpkgs, so packaging it from its GitHub release sidesteps the deferred `nix-homebrew` wiring
-instead of waiting on it. That wiring is deferred deliberately — `autoMigrate = true` would take over the Homebrew
-install `macos-setup` still owns.
+Hammerspoon is not in nixpkgs, so it is packaged from its GitHub release. That sidesteps the deferred `nix-homebrew`
+wiring, which stays deferred because `autoMigrate = true` would take over the Homebrew installs `macos-setup` still
+owns for everything else.
 
 The usual objection is that nix-installing a macOS GUI app breaks TCC, and Hammerspoon is useless without
-Accessibility. That objection does not apply *to this package*, and the reason is narrower than "nix is fine now":
+Accessibility. It does not apply to this package, for reasons narrower than "nix is fine now":
 
-- The Accessibility grant is stored as `kTCCServiceAccessibility|org.hammerspoon.Hammerspoon|0|2`. `client_type=0`
-  means the row is keyed by **bundle identifier**; the `access` table has no path column at all.
-- Its `csreq` blob pins `anchor apple generic`, the bundle id, and Team ID `VQCYSNZB89` — **no path, no cdhash**. A
-  nix-built 1.1.1 in `/nix/store` satisfies the requirement stored for the Homebrew copy, as does 1.0.0, so a version
-  bump does not re-prompt.
-- Since nix-darwin PR #1396 (merged 2025-08-22), `system.activationScripts.applications` **rsyncs** bundles into
-  `/Applications/Nix Apps` (`--checksum --copy-unsafe-links --archive --delete --chmod=-w --no-group --no-owner`)
-  rather than symlinking the folder into the store, so the installed bundle is a real directory. Stable, not
-  permanent: the same script still carries a `TODO: Remove this in 25.11` cleanup for the previous `~/Applications`
-  location.
+- The Accessibility grant is keyed by **bundle identifier**, not path — `client_type=0`, and the `access` table has no
+  path column. Its `csreq` blob pins `anchor apple generic`, the bundle id and Team ID `VQCYSNZB89`, with no path and
+  no cdhash, so a store-built bundle satisfies it and a version bump does not re-prompt.
+- `system.activationScripts.applications` **rsyncs** bundles into `/Applications/Nix Apps` rather than symlinking the
+  folder into the store, so the installed bundle is a real directory at a stable path.
 
-**The bundle must come from `environment.systemPackages`, not `home.packages`.** The rsync above draws from
-`buildEnv { paths = config.environment.systemPackages; pathsToLink = ["/Applications"]; }` — system packages only.
+**The bundle must come from `environment.systemPackages`, not `home.packages`.** That rsync draws from system packages
+only. home-manager's own darwin app placement would not help: `copyApps` is disabled on this host and `linkApps`
+defaults off at this `stateVersion`, so a `home.packages` app would be placed by neither mechanism and simply would
+not appear. Config through home-manager, bundle through `environment.systemPackages`.
 
-home-manager has two darwin app-placement mechanisms, and which is the default is gated on `home.stateVersion`:
-`linkApps` (a plain store symlink) below 25.11, `copyApps` (its own rsync) at or above it. This host is on 26.11 and
-disables `copyApps`, while `linkApps` defaults off at that version — so **home-manager would place a `home.packages`
-app by neither mechanism** and it would simply not appear. Either way it would not land at the stable
-`/Applications/Nix Apps` path the TCC argument depends on. Config through home-manager, bundle through
-`environment.systemPackages`.
-
-**And the activation mechanism is not what makes this TCC-safe — the packaging is.** `--copy-unsafe-links`
-dereferences the store symlink for the *bundle*, but a nix wrapper script inside `Contents/MacOS/` is copied, store
-paths
-intact, and `exec`s a store binary that is what TCC then evaluates. Neovide on this machine is exactly that: a #1396-
-rsynced real directory whose executable is a 240-byte script running an ad-hoc-signed store binary, with the bundle
-itself reporting "not signed at all". Hammerspoon is safe because we copy the release bundle whole and wrap nothing.
-
-Homebrew's FAQ does say that when a cask upgrade takes the uninstall/reinstall path, macOS "removes some internal
-metadata for the old app … including which permissions it's been granted". But Homebrew defaults to in-place upgrades
-where it has permission, and this cask is `auto_updates`, so that is a fallback path rather than the normal one — a
-reason not to worry about the move, not a reason to call it strictly better.
+**The packaging is what makes this TCC-safe, not the activation mechanism.** `--copy-unsafe-links` dereferences the
+store symlink for the *bundle*, but a nix wrapper script inside `Contents/MacOS/` is copied with its store paths
+intact and `exec`s a store binary, which is what TCC then evaluates. Neovide on this machine is exactly that — a real
+rsynced directory whose executable is a 240-byte script running an ad-hoc-signed store binary, with the bundle
+reporting "not signed at all". Hammerspoon is safe because the release bundle is copied whole and nothing wraps it.
 
 Two build settings preserve the upstream Developer ID signature:
 
@@ -108,9 +69,9 @@ Two build settings preserve the upstream Developer ID signature:
   it at a store bash and invalidate that seal, after which `codesign --verify` fails with *a sealed resource is missing
   or invalid*. Note what this does and does not break: resource hashes live in `CodeResources`, and the CodeDirectory
   seals that plist, so the signature and the designated requirement survive — it is verification that fails.
-- **`stdenvNoCC`** — defence in depth. nixpkgs' `strip.sh` does default `stripDebugList` to include `Applications`, but
-  `_doStrip` is a `fixupOutputHooks` entry reached only through `fixupPhase`, which `dontFixup` already skips. This
-  adds an independent guard (no bintools wrapper, so `$STRIP` is unset) and keeps a C toolchain out of the closure.
+- **`stdenvNoCC`** — defence in depth. nixpkgs' `strip.sh` defaults `stripDebugList` to include `Applications`, but
+  `_doStrip` is reached only through `fixupPhase`, which `dontFixup` already skips. This adds an independent guard (no
+  bintools wrapper, so `$STRIP` is unset) and keeps a C toolchain out of the closure.
 
 Never `codesign -s -` this bundle.
 
@@ -118,10 +79,10 @@ Never `codesign -s -` this bundle.
 
 XDG convergence — that is the whole of the reason, and it is sufficient.
 
-It does **not** put the config beyond `macos-setup`'s reach: `bootstrap.sh` rsyncs *both* trees, `home/` into `~` and
-`config/` into `~/.config/`, both with `--force`. `~/.config/hammerspoon` is untouched today only because no
-`dotfiles/config/hammerspoon/` source exists. Treat that as a standing constraint — creating one would let `--force`
-replace the nix-managed entries silently.
+It does **not** put the config beyond `macos-setup`'s reach: `bootstrap.sh` rsyncs `dotfiles/config/` into
+`~/.config/` with `--force`. `~/.config/hammerspoon` survives only because no `dotfiles/config/hammerspoon/` source
+exists. Treat that as a standing constraint — creating one would let `--force` replace the nix-managed entries
+silently.
 
 Hammerspoon relocates via the `MJConfigFile` user default, which is the only supported mechanism — symlinking
 `~/.hammerspoon` is the shape with the open, undiagnosed bug (upstream #3706) and does not vacate the dotfile slot
@@ -135,7 +96,7 @@ Four properties of that default govern the layout:
   cached C global and will not see it.
 - **`hs.configdir` is the dirname, with no trailing slash.** Every concatenation needs an explicit `/`. The published
   docs are wrong about this.
-- **It is undocumented, and a prefs-domain reset wipes it.** See "The `~/.hammerspoon` deletion is load-bearing".
+- **It is undocumented, and a prefs-domain reset wipes it.** See "`~/.hammerspoon` must stay gone".
 
 ## Layout
 
@@ -184,11 +145,9 @@ thing standing between a generated file and the dead-end failure described below
 anything that can fail:
 
 1. Registers `hs.urlevent.httpCallback`.
-2. `require("hs.ipc")`, without which `hs -c` cannot reach the running instance. It was never loaded before this work,
-   so the `hs` CLI has been non-functional all along. Loading it only opens the port — it does not supply the client.
-   `/opt/homebrew/bin/hs` is a cask symlink into the old bundle, and since Homebrew precedes Nix on this machine's
-   PATH it will shadow the nix-provided `hs` even after it dangles. The package must export `hs` in `$out/bin`, and
-   the cask must go in the same step that starts relying on it.
+2. `require("hs.ipc")`, without which `hs -c` cannot reach the running instance. Loading it only opens the port — it
+   does not supply the client, which the package exports as `hs` in `$out/bin`. Activation calls that store path
+   directly rather than resolving `hs` on `PATH`, which is what makes it independent of what else is installed.
 3. Asserts `hs.configdir` matches what nix configured, loudly. Hammerspoon shipped a symlink-resolution regression in
    0.9.79 that broke sibling `require()`, reverted in 0.9.81, with no regression test guarding it since.
 4. Prepends `configdir/lua/?.lua` and `configdir/lua/?/init.lua` to `package.path`, so modules can require each other
@@ -335,17 +294,15 @@ symlinked out of the store, so no build ever loads it, and nothing else would ca
 which profile, what argv a launch produces, and how the picker sequences. Anything needing real key capture or a real
 window server has to be tested on the machine, and the modal question above is exactly that.
 
-## The `~/.hammerspoon` deletion is load-bearing
+## `~/.hammerspoon` must stay gone
 
 `MJConfigFile` is an undocumented `NSUserDefaults` key. Holding Cmd+Opt at launch removes every key in the domain, and a
 prefs reset does the same. When it is missing Hammerspoon silently falls back to the compiled-in
 `~/.hammerspoon/init.lua` — with no error.
 
-While a stale `~/.hammerspoon` exists, that fallback loads a working 2026 config and the drift is invisible. With the
-directory gone, it fails visibly. Delete it only after verifying the move, and delete `dotfiles/home/.hammerspoon/`
-first — not because it overwrites anything nix placed (it restores `~/.hammerspoon`, a different path entirely) but
-because a `setup.sh` run would re-arm the fallback, putting a working 2026 config back under the exact path a lost
-`MJConfigFile` silently reaches for.
+That directory and its source in `dotfiles` are both removed, so the fallback now fails visibly instead of loading a
+stale config. Recreating either would restore the failure mode rather than a safety net: a `setup.sh` run rsyncs
+`dotfiles/home/` into `~`, so a file there lands on the exact path a lost `MJConfigFile` silently reaches for.
 
 ## `hs.ipc` is a privilege surface
 

@@ -24,8 +24,8 @@ let
   # activation; the store path is not a usable launch target.
   appPath = "/Applications/Nix Apps/Hammerspoon.app";
 
-  # Where the Homebrew cask puts its copy. Both carry the same bundle id, which
-  # is why its presence blocks the handler claim below.
+  # Where a Homebrew cask would put its copy. It carries the same bundle id as
+  # this one, which is why its presence blocks the handler claim below.
   cask = "/Applications/Hammerspoon.app";
 
   bundleId = "org.hammerspoon.Hammerspoon";
@@ -360,8 +360,8 @@ in
           fi
         fi
       else
-        # Nothing to restart. Until the cask is removed the login item still
-        # points at it; both share a bundle id and so read the same config.
+        # Nothing to restart. The login item starts this bundle at login, so
+        # this is the first-activation case rather than a steady state.
         echo "  hammerspoon: not running; start ${appPath} to pick up the new config." >&2
       fi
       ''
@@ -370,9 +370,8 @@ in
       if [ -n "''${DRY_RUN:-}" ] || /bin/ps -o args= -p "$PPID" 2>/dev/null | /usr/bin/grep -q -- ' --dry-run'; then
         :
       elif [ -e ${lib.escapeShellArg cask} ]; then
-        # The Homebrew cask is still installed and shares this bundle id, so
-        # LaunchServices — not this config — would decide which copy receives a
-        # link. Removing it is a precondition, not cleanup.
+        # A second bundle with this id is installed, so LaunchServices — not
+        # this config — would decide which copy receives a link.
         echo "  hammerspoon: not claiming the http handler; ${cask} is still installed." >&2
       elif ! /usr/bin/pgrep -qx Hammerspoon >/dev/null 2>&1; then
         echo "  hammerspoon: not running; cannot claim the http handler." >&2
