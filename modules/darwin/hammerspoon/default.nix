@@ -1,9 +1,7 @@
 # Hammerspoon: the application, and the configuration it runs.
 #
-# Several choices here are load-bearing in ways the code cannot show: the
-# config path, the module name the stub requires, the restart-vs-reload
-# branch, the Lua version of the syntax gate, and systemPackages over
-# home.packages. ./README.md explains each.
+# Several choices here fail in ways the code cannot show. ./README.md explains
+# each; the comments below say only why, not how they were arrived at.
 { config, pkgs, lib, ... }:
 
 let
@@ -18,11 +16,8 @@ let
   luaDir = config.local.hammerspoon.luaDir;
   browsers = config.local.browsers.targets;
 
-  # Baked into the stub's fallback so it depends on nothing loaded at runtime.
-  # Escaped like every other option-derived value: unescaped it would be the one
-  # interpolation that could break the generated Lua with no trace back here.
-  # Safari only if no target is configured at all — it is the macOS default and
-  # is always present.
+  # The stub's fallback must not depend on anything loaded at runtime. Safari
+  # only when no target exists at all, since it is always present.
   fallbackBundle = if browsers == [ ] then "com.apple.Safari" else (builtins.head browsers).bundle;
 
   # The bundle is rsynced to a stable path by nix-darwin's applications
@@ -34,6 +29,9 @@ let
   cask = "/Applications/Hammerspoon.app";
 
   bundleId = "org.hammerspoon.Hammerspoon";
+
+  # Document types Hammerspoon's Info.plist claims but has no handler for.
+  claimableExts = "html htm shtml jhtml xhtml xht xhtm txt text url";
 
   # lua5_4 to match the interpreter the app embeds; pkgs.lua is still 5.2.
   checkedLua = name: text:
@@ -54,11 +52,9 @@ let
     s:
     ''"'' + builtins.replaceStrings [ "\\" "\"" "\n" "\r" "\t" ] [ "\\\\" "\\\"" "\\n" "\\r" "\\t" ] s + ''"'';
 
-  # One source of truth for the picker rows and the per-profile hotkeys, so the
-  # two cannot drift. An absent profileDir omits the key rather than writing nil.
-  # Assembled line by line rather than interpolated into a multi-line string: the
-  # generated file is what someone reads when the picker misbehaves, so its
-  # indentation should not depend on how nix strips a here-doc.
+  # One source of truth, so the picker rows and the hotkeys cannot drift.
+  # Assembled line by line because this file is read when the picker misbehaves,
+  # and its indentation should not depend on how nix strips a here-doc.
   targetsLua =
     let
       field = name: value: "    ${name} = ${luaStr value},";
@@ -97,15 +93,10 @@ let
     -- Managed by systems/modules/darwin/hammerspoon. Edits here are replaced
     -- on the next build-switch; hand-edited config lives in lua/.
 
-    -- FIRST, before anything that can fail. With no httpCallback registered
-    -- Hammerspoon does not forward the URL anywhere — it logs "no http callback
-    -- has been set" and drops the event. Once it is the default handler that is
-    -- every clicked link on the machine.
-    --
-    -- The load-time pcall further down cannot help here: it would not catch a
-    -- callback that dispatches into a module which failed to load, since that
-    -- error is raised per click. So this carries its own pcall and its own
-    -- hard-coded fallback, depending on nothing outside this file.
+    -- Registered before anything that can fail: with no httpCallback,
+    -- Hammerspoon drops every clicked link on the machine. The load-time pcall
+    -- below cannot cover this, because a broken dispatch raises per click — so
+    -- the callback carries its own pcall and a fallback needing nothing else.
     hs.urlevent.httpCallback = function(scheme, host, params, fullURL, senderPID)
       local dispatched, err = pcall(function()
         require("lua.router").dispatch(scheme, host, params, fullURL, senderPID)
@@ -140,11 +131,9 @@ let
     -- Lets the modules under lua/ require each other by bare name.
     package.path = hs.configdir .. "/lua/?.lua;" .. hs.configdir .. "/lua/?/init.lua;" .. package.path
 
-    -- Global on purpose: hs.pathwatcher keeps no internal registry, so a
-    -- watcher held only by a local is collected and hot reload stops silently.
-    --
-    -- Filtered and debounced because one editor write emits several events,
-    -- and reloading on the first can read a half-flushed file.
+    -- Global because hs.pathwatcher keeps no registry: a watcher held only by
+    -- a local is collected and hot reload stops silently. Debounced because one
+    -- editor write emits several events, and the first can read a partial file.
     hsConfigReloadTimer = nil
     hsConfigWatcher = hs.pathwatcher.new(hs.configdir .. "/lua", function(files)
       local touchedLua = false
@@ -164,10 +153,9 @@ let
     end)
     hsConfigWatcher:start()
 
-    -- The DOTTED name is load-bearing. A bare require("init") resolves
-    -- through Hammerspoon's own <configdir>/?.lua template back to THIS file
-    -- when lua/init.lua is missing, and recurses until the stack blows — which
-    -- the pcall then reports as success. "lua.init" cannot collide.
+    -- Dotted, because a bare require("init") resolves back to this file
+    -- through Hammerspoon's own <configdir>/?.lua template and recurses until
+    -- the stack blows — which the pcall then reports as success.
     local ok, err = pcall(require, "lua.init")
     if not ok then
       hs.notify.new({ title = "Hammerspoon config failed to load", informativeText = tostring(err) }):send()
@@ -260,20 +248,15 @@ in
     type = lib.types.bool;
     default = true;
     description = ''
-      Make Hammerspoon the system handler for http and https on activation, so
-      clicked links reach the router.
+      Make Hammerspoon the system handler for http and https, so clicked links
+      reach the router.
 
-      Claiming it is deliberately conditional, and both conditions matter.
+      Refuses while a second bundle claiming `org.hammerspoon.Hammerspoon` is
+      installed, because LaunchServices then picks which copy receives a link.
 
-      macOS shows a confirmation prompt the first time the http/https handler
-      changes, so this only calls out when the handler is not already ours —
-      otherwise every activation would raise a dialog.
-
-      It also refuses while a second bundle claiming `org.hammerspoon.Hammerspoon`
-      is installed. Two bundles share that id until the Homebrew cask is gone,
-      and LaunchServices then picks which copy receives a link — measured, not
-      theoretical. That makes removing the cask a precondition of this rather
-      than cleanup after it, and this guard is what enforces the order.
+      Hammerspoon's Info.plist also claims html, txt, url and `*`, which macOS
+      offers to transfer along with the browser. It handles none of them, so
+      activation puts any it takes back.
     '';
   };
 
@@ -287,11 +270,8 @@ in
       }
     ];
 
-    # Must be systemPackages, not home.packages: the TCC argument in README.md
-    # rests on nix-darwin rsyncing the bundle into /Applications/Nix Apps, and
-    # that activation reads environment.systemPackages only. home-manager's own
-    # app placement is off entirely at this stateVersion, so a home.packages
-    # app would not be placed at all.
+    # systemPackages, not home.packages: only that is rsynced into
+    # /Applications/Nix Apps, which the TCC grant depends on.
     environment.systemPackages = [ hammerspoon ];
 
     # Written in the userDefaults phase, before the files below are placed.
@@ -336,17 +316,10 @@ in
           /bin/launchctl asuser "$hsUid" /usr/bin/sudo -u ${user} --set-home "$@"
         }
 
-        # -a is load-bearing: with no instance running, `hs` otherwise puts up a
-        # Launch/Cancel alert, and under launchctl/sudo nothing can answer it —
-        # activation would hang on a modal nobody sees. `hs -h` does not list
-        # the flag, but hs.man documents it: "If Hammerspoon is not currently
-        # running, exit with EX_TEMPFAIL rather than prompt the user." Its
-        # opposite is -A, which launches instead of prompting; the print-cloning
-        # flag people confuse it with is -C. -t bounds the send/receive wait,
-        # which the CLI otherwise defaults to 4s.
-        #
-        # A failed probe counts as a mismatch: on the first switch the running
-        # instance predates hs.ipc and cannot answer at all.
+        # -a makes `hs` exit rather than raise a Launch/Cancel alert that
+        # nothing under launchctl can answer. It is absent from `hs -h` but
+        # documented in hs.man. A failed probe counts as a mismatch, since an
+        # instance predating hs.ipc cannot answer at all.
         have="$(asUser ${hammerspoon}/bin/hs -a -t 5 -c 'print(hs.configdir)' 2>/dev/null || true)"
 
         if [ "$have" = '${cfgDir}' ]; then
@@ -370,10 +343,8 @@ in
             now=""
             for _ in 1 2 3 4 5 6 7 8 9 10; do
               /bin/sleep 1
-              # This loop is waiting for an instance to appear, so it is the
-              # one place that genuinely runs with none. -a makes `hs` exit
-              # rather than prompt; the pgrep is belt and braces, and also
-              # avoids a pointless port attempt on every iteration.
+              # The one place that genuinely runs with no instance, so the
+              # process check is made here rather than inherited.
               /usr/bin/pgrep -qx Hammerspoon >/dev/null 2>&1 || continue
               now="$(asUser ${hammerspoon}/bin/hs -a -t 5 -c 'print(hs.configdir)' 2>/dev/null || true)"
               [ "$now" = '${cfgDir}' ] && break
@@ -403,19 +374,49 @@ in
         echo "  hammerspoon: not running; cannot claim the http handler." >&2
       else
         hsUid2="$(/usr/bin/id -u ${user})"
-        # Only when it is not already ours: macOS raises a confirmation dialog
-        # on every real change, and activation is a poor place to raise one
-        # repeatedly.
-        /bin/launchctl asuser "$hsUid2" /usr/bin/sudo -u ${user} --set-home           ${hammerspoon}/bin/hs -a -t 10 -c '
-            local claimed = 0
-            for _, scheme in ipairs({ "http", "https" }) do
-              if hs.urlevent.getDefaultHandler(scheme) ~= "${bundleId}" then
-                hs.urlevent.setDefaultHandler(scheme)
-                claimed = claimed + 1
-              end
-            end
-            print(claimed)
-            ' </dev/null >/dev/null 2>&1 || true
+        asUser2() {
+          /bin/launchctl asuser "$hsUid2" /usr/bin/sudo -u ${user} --set-home "$@"
+        }
+        handlerFor() {
+          asUser2 ${pkgs.duti}/bin/duti -x "$1" 2>/dev/null | /usr/bin/tail -1 || true
+        }
+
+        # duti, because hs.urlevent.setDefaultHandler fails silently on macOS
+        # 26.6.2 — it reports success and leaves the handler unchanged.
+        current="$(asUser2 ${hammerspoon}/bin/hs -a -t 10 -c 'print(hs.urlevent.getDefaultHandler("http"))' </dev/null 2>/dev/null | /usr/bin/tail -1 || true)"
+
+        if [ "$current" != '${bundleId}' ]; then
+          echo "  hammerspoon: claiming the http handler (macOS will ask you to confirm)" >&2
+
+          for ext in ${claimableExts}; do
+            eval "was_$ext=\"$(handlerFor "$ext")\""
+          done
+
+          # https follows http, and duti returns -54 for it either way.
+          asUser2 ${pkgs.duti}/bin/duti -s '${bundleId}' http >/dev/null 2>&1 || true
+
+          # Wait for the dialog to be answered before undoing anything, or the
+          # restore lands first and the answer re-takes the types.
+          for _ in $(/usr/bin/seq 1 30); do
+            now="$(asUser2 ${hammerspoon}/bin/hs -a -t 10 -c 'print(hs.urlevent.getDefaultHandler("http"))' </dev/null 2>/dev/null | /usr/bin/tail -1 || true)"
+            [ "$now" = '${bundleId}' ] && break
+            /bin/sleep 1
+          done
+
+          if [ "$now" = '${bundleId}' ]; then
+            /bin/sleep 2
+            for ext in ${claimableExts}; do
+              eval "prev=\$was_$ext"
+              [ -n "$prev" ] || continue
+              [ "$prev" = '${bundleId}' ] && continue
+              [ "$(handlerFor "$ext")" = '${bundleId}' ] || continue
+              echo "  hammerspoon: returning .$ext to $prev" >&2
+              asUser2 ${pkgs.duti}/bin/duti -s "$prev" ".$ext" all >/dev/null 2>&1 || true
+            done
+          else
+            echo "  hammerspoon: handler unchanged; nothing to undo." >&2
+          fi
+        fi
         fi
       ''
     );
