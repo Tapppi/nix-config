@@ -100,3 +100,59 @@ branch deletion — but that lives on GitHub, not in the repo. A clone does not
 carry it. If this repo ever moves to a self-hosted forge, re-verify that
 `refs/pull/*` survives branch deletion there before relying on any
 squash-merge.
+
+## A stale index makes per-path git commands lie
+
+Two commands take a pathspec and look like they scope to it. Neither does when
+something else is already staged, and **both succeed silently** — the exit code
+tells you nothing.
+
+### `git checkout -- <path>` restores from the index, not from `HEAD`
+
+If the file is staged, this restores the *staged* version — precisely the thing
+you were trying to throw away. The file looks reverted and is not.
+
+```bash
+git add file.ext          # the bad version is now IN the index
+git checkout -- file.ext  # restores the bad version. Exit 0, no output.
+```
+
+Use an explicit source:
+
+```bash
+git checkout HEAD -- <path>
+git restore --source=HEAD --staged --worktree <path>   # modern equivalent
+```
+
+### `git commit` commits the whole index, not the paths you just added
+
+```bash
+git add -A                # earlier, for some unrelated reason
+git add path/to/one.ext   # "just this one"
+git commit -m "..."       # commits everything staged
+```
+
+The tell is the *next* commit reporting "nothing to commit" — so a run that
+splits work into several commits catches it, and a single mixed commit at the
+end of a session does not.
+
+Scope it, or clear the index first:
+
+```bash
+git commit -- <paths>     # pathspec-limited; ignores the rest of the index
+git reset                 # unstage everything, then stage per commit
+```
+
+### The rule
+
+**Clear or scope the index before any per-path operation, and verify the
+result rather than the exit code.** `git diff HEAD -- <path>` after a revert,
+`git show --stat HEAD` after a commit. Both commands report success either way.
+
+**This repo manufactures the stale index itself.** Nix cannot see untracked
+files and hard-errors on them, so `git add` is *required* to make a new module
+visible to `nix build` — [deploys.md](deploys.md#untracked-files-are-invisible-to-nix)
+tells you to do exactly that. Following that instruction is what leaves the
+index dirty, so these two traps are a direct consequence of the build workflow
+rather than a generic git curiosity. Stage what nix needs, then clear or scope
+before committing or reverting.
