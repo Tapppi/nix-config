@@ -83,6 +83,34 @@ check(
   "stale name should survive a failed read"
 )
 
+print("shared window helpers")
+local whu = require("window-hotkey-utils")
+check(
+  "containsWindow never matches on a nil id",
+  (function()
+    -- Chromium keeps helper windows whose AX id cannot be read. Comparing two
+    -- nils would report an unrelated window as a match.
+    local noId = mkwin(nil, "helper")
+    local other = mkwin(nil, "another helper")
+    return whu.containsWindow({ noId }, other) == false
+  end)()
+)
+check(
+  "containsWindow matches by id, not identity",
+  (function()
+    return whu.containsWindow({ mkwin(70, "a") }, mkwin(70, "different title")) == true
+      and whu.containsWindow({ mkwin(70, "a") }, mkwin(71, "a")) == false
+  end)()
+)
+check(
+  "applyLayout is a no-op without a layout function",
+  (function()
+    -- nil layoutFn is how a toggle-only binding is expressed, so this must not
+    -- reposition rather than erroring.
+    return whu.applyLayout(mkwin(72, "x"), nil) == false and whu.applyLayout(nil, function() end) == false
+  end)()
+)
+
 print("window matching")
 local chromeWins = {
   mkwin(1, "Some page - Google Chrome - Tapani (acme.example)"),

@@ -114,6 +114,39 @@ function M.corner(position, width, height, margin)
   end
 end
 
+-- ─── Window helpers ───────────────────────────────────────────────
+
+--- Position a window with a layout function, if there is anything to do.
+---
+--- Every caller shared this same three-part idiom. Centralising it also states
+--- the contract once: a nil layoutFn means "never reposition", which is how
+--- toggle-only bindings are expressed.
+function M.applyLayout(win, layoutFn)
+  if not win or not layoutFn then
+    return false
+  end
+  win:setFrame(layoutFn(M.activeScreen(), win))
+  return true
+end
+
+--- Is `win` one of `windows`?
+---
+--- hs.window:id() is nil for a window whose AX id cannot be read, and Chromium
+--- keeps several such helper windows per real one. Comparing two nils would
+--- report an unrelated window as a match, so a window with no id is never one.
+function M.containsWindow(windows, win)
+  local id = win and win:id()
+  if not id then
+    return false
+  end
+  for _, w in ipairs(windows) do
+    if w:id() == id then
+      return true
+    end
+  end
+  return false
+end
+
 -- ─── Hotkey binding ───────────────────────────────────────────────
 -- Bind a hyper+key hotkey that toggles an app and positions its window.
 --
@@ -144,9 +177,7 @@ function M.bindToggle(key, bundleID, layoutFn, opts)
     if appName then
       local wf = hs.window.filter.new(appName)
       wf:subscribe(hs.window.filter.windowCreated, function(win)
-        if layoutFn then
-          win:setFrame(layoutFn(M.activeScreen(), win))
-        end
+        M.applyLayout(win, layoutFn)
         win:focus()
       end)
       M._filters[bundleID] = wf
@@ -169,10 +200,7 @@ function M.bindToggle(key, bundleID, layoutFn, opts)
           if not a then
             return
           end
-          local w = a:mainWindow()
-          if w then
-            w:setFrame(layoutFn(M.activeScreen(), w))
-          end
+          M.applyLayout(a:mainWindow(), layoutFn)
         end)
       end
       return
@@ -186,9 +214,7 @@ function M.bindToggle(key, bundleID, layoutFn, opts)
     end
 
     if win then
-      if layoutFn then
-        win:setFrame(layoutFn(M.activeScreen(), win))
-      end
+      M.applyLayout(win, layoutFn)
       app:unhide()
       win:focus()
     else

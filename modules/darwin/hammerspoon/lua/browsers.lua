@@ -279,22 +279,6 @@ end
 -- stacks.
 M._pending = {}
 
-local function contains(windows, win)
-  -- hs.window:id() is nil for a window whose AX id cannot be read, and
-  -- Chromium has several such helper windows. Comparing two nils would report
-  -- an unrelated window as this target's.
-  local id = win and win:id()
-  if not id then
-    return false
-  end
-  for _, w in ipairs(windows) do
-    if w:id() == id then
-      return true
-    end
-  end
-  return false
-end
-
 --- Focus this profile's window, or put it away if it already has focus.
 ---
 --- app:hide() would take every profile of the same browser with it, so it is
@@ -328,7 +312,7 @@ function M.toggle(target, layoutFn)
         end
         local win = M.windowsFor(target)[1]
         if win then
-          win:setFrame(layoutFn(whu.activeScreen(), win))
+          whu.applyLayout(win, layoutFn)
         end
       end)
       M._pending[target.key] = timer
@@ -337,12 +321,12 @@ function M.toggle(target, layoutFn)
   end
 
   local focused = hs.window.focusedWindow()
-  if contains(windows, focused) then
+  if whu.containsWindow(windows, focused) then
     local app = focused:application()
     local othersVisible = false
     if app then
       for _, w in ipairs(app:visibleWindows()) do
-        if not contains(windows, w) then
+        if not whu.containsWindow(windows, w) then
           othersVisible = true
           break
         end
@@ -378,9 +362,7 @@ function M.toggle(target, layoutFn)
     win:unminimize()
   end
 
-  if layoutFn then
-    win:setFrame(layoutFn(whu.activeScreen(), win))
-  end
+  whu.applyLayout(win, layoutFn)
   win:focus()
 
   -- Matches what whu.bindToggle did for these keys before they moved here.
