@@ -30,8 +30,12 @@ let
 
   bundleId = "org.hammerspoon.Hammerspoon";
 
-  # Document types Hammerspoon's Info.plist claims but has no handler for.
-  claimableExts = "html htm shtml jhtml xhtml xht xhtm txt text url";
+  # Types Hammerspoon claims that are not web content. Web types are excluded
+  # deliberately: on macOS they ARE the default-browser identity, so moving one
+  # away raises "change your default web browser?" and accepting it would undo
+  # the claim. They also need no undoing — a web file opened into Hammerspoon
+  # arrives as a file:// URL and reaches the picker like any other link.
+  restorableExts = "txt text url";
 
   # lua5_4 to match the interpreter the app embeds; pkgs.lua is still 5.2.
   checkedLua = name: text:
@@ -255,8 +259,8 @@ in
       installed, because LaunchServices then picks which copy receives a link.
 
       Hammerspoon's Info.plist also claims html, txt, url and `*`, which macOS
-      offers to transfer along with the browser. It handles none of them, so
-      activation puts any it takes back.
+      transfers along with the browser. Web types are left with it — they open
+      as file:// URLs and reach the picker — but the rest are put back.
     '';
   };
 
@@ -388,7 +392,7 @@ in
         if [ "$current" != '${bundleId}' ]; then
           echo "  hammerspoon: claiming the http handler (macOS will ask you to confirm)" >&2
 
-          for ext in ${claimableExts}; do
+          for ext in ${restorableExts}; do
             eval "was_$ext=\"$(handlerFor "$ext")\""
           done
 
@@ -405,7 +409,7 @@ in
 
           if [ "$now" = '${bundleId}' ]; then
             /bin/sleep 2
-            for ext in ${claimableExts}; do
+            for ext in ${restorableExts}; do
               eval "prev=\$was_$ext"
               [ -n "$prev" ] || continue
               [ "$prev" = '${bundleId}' ] && continue
