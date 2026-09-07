@@ -38,8 +38,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
     app="$out/Applications/Hammerspoon.app"
 
-    # Standalone Mach-O with no rpath, so a symlink suffices. Exported here
-    # because the cask's /opt/homebrew/bin/hs dangles once the cask goes.
+    # Standalone Mach-O with no rpath, so a symlink suffices. Exported because
+    # activation drives the running instance through it.
     ln -s "$app/Contents/Frameworks/hs/hs" "$out/bin/hs"
     ln -s "$app/Contents/Resources/man/hs.man" "$out/share/man/man1/hs.1"
 

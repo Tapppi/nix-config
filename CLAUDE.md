@@ -34,10 +34,8 @@ The repository structure is based on [dustinlyons/nixos-config](https://github.c
     its config, the `session-sync` launchd agent, Hammerspoon (application,
     configuration, link routing and hotkeys, see
     `modules/darwin/hammerspoon/README.md`), and the Determinate Nix
-    accommodations. Hammerspoon is the first piece to move over complete —
-    `macos-setup` no longer installs it and the login item points at the
-    nix-built bundle. Everything else on that machine is still owned by
-    `macos-setup` — check there before assuming something is managed here.
+    accommodations. Everything else on that machine is owned by `macos-setup` —
+    check there before assuming something is managed here.
   - **home-manager is wired into this host** as of SYSMI-63, in
     `hosts/darwin-minimal/default.nix`. It is scoped hard: `useUserPackages`
     keeps `home.profileDirectory` at `/etc/profiles/per-user` rather than
