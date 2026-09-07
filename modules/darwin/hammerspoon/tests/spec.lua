@@ -530,6 +530,65 @@ else
       RECORDED.fallbackOpened and RECORDED.fallbackOpened.bundle
     )
 
+    -- The whole reason the callback is registered before anything that can
+    -- fail. A config that throws must still leave every clicked link reaching
+    -- the fallback; registering afterwards would drop them all silently, and
+    -- with a healthy config both orders look identical.
+    --
+    -- The throwing init is planted under the stub's own configdir, which its
+    -- package.path prepend searches ahead of the build directory — so this
+    -- also proves that prepend is load-bearing.
+    local plantedInit = hs.configdir .. "/lua/lua/init.lua"
+    local planted = io.open(plantedInit, "w")
+    if planted then
+      planted:write('error("deliberately broken config")\n')
+      planted:close()
+
+      local brokenFrom = #RECORDED.notified
+      package.loaded["lua.init"] = nil
+      hs.urlevent.httpCallback = nil
+      RECORDED.fallbackOpened = nil
+
+      local brokeLoaded = pcall(dofile, STUBLUA)
+      check("a throwing config does not stop the stub", brokeLoaded)
+      check("a throwing config is reported", notifiedSince("Hammerspoon config failed to load", brokenFrom))
+      check("the callback survives a throwing config", type(hs.urlevent.httpCallback) == "function")
+
+      if type(hs.urlevent.httpCallback) == "function" then
+        -- Handled, not necessarily via the fallback: router and picker are
+        -- separate modules, so a throwing init.lua leaves them working and the
+        -- link still reaches the picker. What must not happen is the link
+        -- going nowhere, which is what registering after the load would cause.
+        local handledFrom = #RECORDED.alerts
+        pcall(hs.urlevent.httpCallback, "https", "broken.example", {}, "https://broken.example", 1)
+        check(
+          "a link is still handled when the config is broken",
+          #RECORDED.alerts > handledFrom or RECORDED.fallbackOpened ~= nil
+        )
+      end
+
+      os.remove(plantedInit)
+      package.loaded["lua.init"] = nil
+      dofile(STUBLUA)
+    else
+      check("could plant a throwing config", false, plantedInit)
+    end
+
+    -- The ordering contract itself. The config load is pcall-wrapped, so a
+    -- throwing config alone cannot distinguish registering first from
+    -- registering last — only an uncaught failure between the top of the file
+    -- and the registration can, and hs.ipc and the pathwatcher are both
+    -- unguarded. With the callback registered first the link still routes;
+    -- registered last, every click on the machine goes nowhere.
+    hs.urlevent.httpCallback = nil
+    _G.PATHWATCHER_RAISES = true
+    local survivedWatcher = pcall(dofile, STUBLUA)
+    _G.PATHWATCHER_RAISES = nil
+    check("an uncaught failure aborts the stub", not survivedWatcher)
+    check("the callback is registered before anything that can fail", type(hs.urlevent.httpCallback) == "function")
+    package.loaded["lua.init"] = nil
+    dofile(STUBLUA)
+
     -- Reloaded against a configdir that does not match the one compiled in, to
     -- exercise the other side of the drift branch. The check above only proves
     -- it stays quiet when the paths agree.

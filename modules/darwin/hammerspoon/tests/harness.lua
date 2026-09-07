@@ -203,6 +203,9 @@ _G.hs = {
   },
   pathwatcher = {
     new = function(path, fn)
+      if _G.PATHWATCHER_RAISES then
+        error("pathwatcher unavailable")
+      end
       recorded.watched = { path = path, fn = fn }
       return {
         start = function()

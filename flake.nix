@@ -162,7 +162,7 @@
             chmod -R u+w lua tests
 
             stubCfgDir="$PWD/cfg"
-            mkdir -p "$stubCfgDir/lua"
+            mkdir -p "$stubCfgDir/lua/lua"
             substitute ${stub} stub.lua --replace-fail '@stubCfgDir@' "$stubCfgDir"
 
             # find, not a glob: subdirectories must be checked too.
