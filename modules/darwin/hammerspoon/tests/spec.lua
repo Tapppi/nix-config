@@ -330,6 +330,16 @@ picker.present("https://one.example")
 check("shows an alert for the first link", #RECORDED.alerts == 1)
 check("enters the modal once", RECORDED.entered == 1)
 check("lists every target", RECORDED.alerts[1]:find("Company") ~= nil, RECORDED.alerts[1])
+-- The modal holds the keyboard for picker.timeout. If the alert is given a
+-- shorter life the machine captures every keystroke with nothing on screen
+-- explaining why — which is what happens when a nil screen argument truncates
+-- hs.alert's ipairs scan and the duration silently falls back to 2s.
+check(
+  "the alert outlives the modal",
+  type(RECORDED.alertShown.duration) == "number" and RECORDED.alertShown.duration > picker.timeout,
+  "duration=" .. tostring(RECORDED.alertShown.duration) .. " timeout=" .. tostring(picker.timeout)
+)
+check("the alert is styled, not defaulted", type(RECORDED.alertShown.style) == "table")
 
 picker.present("https://two.example")
 check("a second link reopens the alert", #RECORDED.alerts == 2)
@@ -451,6 +461,62 @@ if loaded then
       return true
     end)()
   )
+end
+
+print("generated stub")
+
+-- STUBLUA is the real generated init.lua, built by nix with test values. It is
+-- the only file whose failure loses every clicked link on the machine, and
+-- nothing else in the build executes it: home.file receives the built store
+-- path unread. Loading it last, because it registers a path watcher and
+-- reassigns hs.urlevent.httpCallback.
+if STUBLUA then
+  hs.configdir = STUBCFGDIR
+
+  local stubLoaded, stubErr = pcall(dofile, STUBLUA)
+  check("the generated stub loads", stubLoaded, tostring(stubErr))
+
+  if stubLoaded then
+    check("it registers an http callback", type(hs.urlevent.httpCallback) == "function")
+    check("it starts the reload watcher", RECORDED.watcherStarted == true)
+    check(
+      "the watcher watches lua/, not the config root",
+      RECORDED.watched and RECORDED.watched.path == STUBCFGDIR .. "/lua",
+      RECORDED.watched and RECORDED.watched.path
+    )
+    check(
+      "it reports no configdir drift when the path matches",
+      RECORDED.notified[#RECORDED.notified] ~= "Hammerspoon config dir drift"
+    )
+
+    -- The reason the callback carries its own pcall: a raise per click cannot
+    -- be covered by the load-time one, and an uncaught raise drops the link.
+    hs.urlevent.httpCallback("https", "one.example", {}, "https://one.example", 1)
+    check(
+      "a clicked link reaches the picker rather than the fallback",
+      RECORDED.fallbackOpened == nil and #RECORDED.alerts > 0
+    )
+
+    -- Force the dispatch to raise and prove the fallback catches it. This is
+    -- the path that keeps a broken router from losing the link outright.
+    local realTargets = package.loaded["browsers"].targets
+    package.loaded["browsers"].targets = nil
+    local raised = pcall(hs.urlevent.httpCallback, "https", "two.example", {}, "https://two.example", 1)
+    package.loaded["browsers"].targets = realTargets
+    check("a raising dispatch does not propagate out of the callback", raised)
+    check(
+      "the fallback opens the link instead of dropping it",
+      RECORDED.fallbackOpened ~= nil and RECORDED.fallbackOpened.url == "https://two.example",
+      RECORDED.fallbackOpened and RECORDED.fallbackOpened.url
+    )
+    check(
+      "the fallback bundle needs nothing outside the stub",
+      RECORDED.fallbackOpened and RECORDED.fallbackOpened.bundle == STUBFALLBACK,
+      RECORDED.fallbackOpened and RECORDED.fallbackOpened.bundle
+    )
+  end
+else
+  check("STUBLUA was passed to the spec", false, "the flake check must build the stub and pass its path")
 end
 
 if failures == 0 then
