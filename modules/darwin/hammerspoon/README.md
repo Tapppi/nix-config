@@ -8,14 +8,46 @@ browser *profile* for an opened URL.
 Hammerspoon, its configuration, the link router, the picker and the hotkeys are all delivered from here. Activation
 claims the `http`/`https` handler, so a clicked link reaches the router.
 
-Activation checks the current handler and calls out only when it is not already Hammerspoon's, because macOS raises a
-confirmation dialog on every real change.
+Activation calls out before each change it makes, because macOS raises a confirmation dialog on every real change. It
+is not reliably silent when everything already holds: the handler probe runs through `hs.ipc`, which the reload just
+before it tears down and rebuilds, and a failed probe reads as an empty handler — so a run can announce a claim it does
+not need and then wait out a prompt that never comes.
+
+**The claim is gated on a Hammerspoon that answers with *this* config**, never on the process merely existing. An
+instance that outlived its `killall` still answers `pgrep` while running the old config, and claiming `http` for one
+that never registered `hs.urlevent.httpCallback` drops every clicked link on the machine with no fallback — strictly
+worse than not claiming at all.
 
 **The claim goes through `duti`, not `hs.urlevent.setDefaultHandler`** — the latter reports success and leaves the
-handler unchanged on macOS 26.6.2. Taking `http` also transfers the document types Hammerspoon's `Info.plist` claims.
-`txt`, `text` and `url` are put back afterwards; the web types are deliberately left with it, because on macOS they
-**are** the default-browser identity — moving one asks to change the browser back, and accepting that would undo the
-claim. They need no undoing: a web file opened into Hammerspoon arrives as a `file://` URL and reaches the picker.
+handler unchanged on macOS 26.6.2.
+
+Hammerspoon's `Info.plist` declares `html htm shtml jhtml`, `txt text`, `url`, `xhtml xht xhtm`, `spoon` and `*` as
+document types, all Viewer, and `hammerspoon`, `http`, `https` and `mailto` as URL schemes. Only `http`/`https` are
+claimed; `mailto` is left alone deliberately, since `hs.urlevent.httpCallback` does not serve it and taking it would
+drop every `mailto:` link with no fallback.
+
+Extensions are the wrong unit for the document types — UTIs are, and they collapse. `html htm shtml` are one
+`public.html`, which is why taking `http` transfers all three together; `xhtml xht xhtm` are one `public.xhtml`;
+`jhtml` is a *dynamic* UTI. `spoon` was always Hammerspoon's, and `*` claims nothing that resolves — `pdf`, `png`,
+`md` and `json` all still land elsewhere. That leaves three groups and three treatments:
+
+- **Left with Hammerspoon** — `html`, `htm`, `shtml`. On macOS the web types **are** the default-browser identity, so
+  moving one asks to change the browser back and accepting that would undo the claim. They need no undoing anyway: a
+  web file opened into Hammerspoon arrives as a `file://` URL and reaches the picker.
+- **Claimed outright** — the `public.xhtml` family, via `.xhtml`. Wanted for the same reason as `html`, but macOS
+  never transfers it: it sat with Chrome. One claim moves `xhtml`, `xht` and `xhtm` together. It is a new default
+  rather than a hand-back, so it raises its own confirmation dialog the first time, and the claim is asynchronous —
+  `duti` returns before the dialog is answered.
+  `jhtml` is **not** claimed. Its dynamic UTI is one `duti` rejects outright (`error -50`), so listing it would
+  re-attempt an impossible claim, and wait out its 30s timeout, on every activation.
+- **Put back** — `txt`, `text`, `url`. A `.url` is a shortcut file rather than web content — the picker hands the
+  browser the file instead of following the link inside it — and `txt`/`text` are not web content at all.
+
+The restore runs on every activation rather than only on the one that claims `http`, because the document-type claims
+raise their own prompts and answering one transfers every type Hammerspoon declares. It restores from a snapshot taken
+at the start of the same run, so each claim is waited out before it runs; a prompt answered after activation has
+finished is still not repaired, since the next run sees the type already Hammerspoon's and has nothing to put it back
+to.
 
 **Known defects, deliberately left.** The input source is set synchronously right after `win:focus()`, so the async
 `windowFocused` handler never records the previous layout; the layout is also set immediately after
@@ -329,10 +361,11 @@ The reload watcher must point at `<cfgdir>/lua`, never at `<cfgdir>`. `hs.pathwa
 creating the FSEvents stream, so watching `lua/` follows into the repo and fires on edits there; watching the parent
 sees only a symlink entry and never fires.
 
-Activation does nothing at all under a dry run — triggered either by a `DRY_RUN` environment variable or by
-`--dry-run` in the parent's argv, matching home-manager's own guard. `darwin-rebuild` routes that flag into build
-flags only and runs the activation script regardless, so without an explicit check a documented preview command would
-really restart Hammerspoon.
+Activation does nothing at all under a dry run. The test is home-manager's own, `[[ -v DRY_RUN || "$parentArgs" ==
+*" --dry-run"* ]]`, and `-v` rather than `-n` is the load-bearing half: an exported but empty `DRY_RUN` is *set*, so
+home-manager previews on it, while a guard testing `-n` would restart Hammerspoon and raise the handler dialog beside
+a home-manager that changed nothing. `darwin-rebuild` routes `--dry-run` into build flags only and runs the activation
+script regardless, so without an explicit check a documented preview command would really restart Hammerspoon.
 
 Otherwise it restarts when `hs.configdir` does not yet match the configured path, and only reloads when it does. The
 restart branch is what makes the first switch work, since the preference is read once at launch.
@@ -342,6 +375,11 @@ instance — and on the first activation that instance is still the old config, 
 cannot answer on precisely the run that must restart. Treat any failure, empty output or non-zero exit as "does not
 match" and restart; reading it as an error, or as a match, leaves the Mac running the stale config while activation
 reports success.
+
+That same comparison is the one verdict everything downstream is gated on — whether to reload, and whether to claim the
+handler. The restart also re-asserts `MJConfigFile` between the kill and the relaunch: it is written in the
+`userDefaults` phase into the prefs of an app that is still running, and a termination flush can put the cached value
+back.
 
 Edits made inside an agent worktree do not hot-reload — `local.hammerspoon.luaDir` defaults to the main checkout, and
 that is correct: the running config should follow the reviewed tree, not a branch.
