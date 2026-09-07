@@ -154,15 +154,33 @@ function M.present(url)
   -- load, and an unbound modal would throw on every click.
   M.setup()
 
+  -- Whether a picker is already up decides what a failure below may discard.
+  local reopening = state.timer ~= nil
+
   state.queue[#state.queue + 1] = url
 
   -- Every raise out of offer() reaches the stub's fallback, which opens the
-  -- link. A queue still holding it would open it a second time on the next
-  -- link's keypress — and a timer left armed would open it a third.
+  -- link that raised. The queue must not still hold it, or the next keypress
+  -- opens it a second time.
   local offered, err = pcall(offer)
   if not offered then
-    dismiss()
-    drain()
+    if reopening then
+      -- A picker was already on screen with links behind it. Those are still
+      -- answerable under the timers it armed, so only the link that raised is
+      -- given up — dropping the rest would lose them with nothing on screen to
+      -- say so, which is the one failure this module exists to avoid.
+      for i = #state.queue, 1, -1 do
+        if state.queue[i] == url then
+          table.remove(state.queue, i)
+          break
+        end
+      end
+    else
+      -- Nothing was on screen, so there is no picker to answer: release the
+      -- keyboard and let the fallback have the link.
+      dismiss()
+      drain()
+    end
     error(err, 0)
   end
 end
