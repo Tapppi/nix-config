@@ -222,7 +222,6 @@ _G.hs = {
   reload = function()
     recorded.reloaded = (recorded.reloaded or 0) + 1
   end,
-  configdir = nil,
   screen = {
     mainScreen = function()
       return _G.SCREEN

@@ -336,10 +336,15 @@ check("lists every target", RECORDED.alerts[1]:find("Company") ~= nil, RECORDED.
 -- hs.alert's ipairs scan and the duration silently falls back to 2s.
 check(
   "the alert outlives the modal",
-  type(RECORDED.alertShown.duration) == "number" and RECORDED.alertShown.duration > picker.timeout,
-  "duration=" .. tostring(RECORDED.alertShown.duration) .. " timeout=" .. tostring(picker.timeout)
+  RECORDED.alertShown
+    and type(RECORDED.alertShown.duration) == "number"
+    and RECORDED.alertShown.duration > picker.timeout,
+  "duration="
+    .. tostring(RECORDED.alertShown and RECORDED.alertShown.duration)
+    .. " timeout="
+    .. tostring(picker.timeout)
 )
-check("the alert is styled, not defaulted", type(RECORDED.alertShown.style) == "table")
+check("the alert is styled, not defaulted", RECORDED.alertShown and type(RECORDED.alertShown.style) == "table")
 
 picker.present("https://two.example")
 check("a second link reopens the alert", #RECORDED.alerts == 2)
@@ -421,7 +426,10 @@ print("init.lua")
 -- Loading the real entry point: a typo in the hotkey loop or a renamed helper
 -- would pass luac -p and then throw on the machine, leaving no hotkeys at all.
 NAMES["com.mitchellh.ghostty"] = "Ghostty"
-local loaded, err = pcall(dofile, INITLUA)
+-- require, not dofile: dofile leaves package.loaded empty, so the generated
+-- stub's own require("lua.init") would run the whole file a second time and
+-- every assertion below would describe a doubly-registered world.
+local loaded, err = pcall(require, "lua.init")
 check("init.lua loads", loaded, tostring(err))
 
 if loaded then
@@ -468,41 +476,86 @@ print("generated stub")
 -- STUBLUA is the real generated init.lua, built by nix with test values. It is
 -- the only file whose failure loses every clicked link on the machine, and
 -- nothing else in the build executes it: home.file receives the built store
--- path unread. Loading it last, because it registers a path watcher and
--- reassigns hs.urlevent.httpCallback.
-if STUBLUA then
+-- path unread. Loaded last, because it registers a path watcher and reassigns
+-- hs.urlevent.httpCallback.
+if not STUBLUA then
+  check("STUBLUA was passed to the spec", false, "the flake check must build the stub and pass its path")
+else
   hs.configdir = STUBCFGDIR
 
+  local notifiedBefore = #RECORDED.notified
   local stubLoaded, stubErr = pcall(dofile, STUBLUA)
   check("the generated stub loads", stubLoaded, tostring(stubErr))
 
+  --- Did the stub emit this notification since it started loading?
+  local function notifiedSince(title, from)
+    for i = from + 1, #RECORDED.notified do
+      if RECORDED.notified[i] == title then
+        return true
+      end
+    end
+    return false
+  end
+
   if stubLoaded then
     check("it registers an http callback", type(hs.urlevent.httpCallback) == "function")
-    check("it starts the reload watcher", RECORDED.watcherStarted == true)
+
+    -- The load-time pcall reports failure through a notification and nothing
+    -- else, so a config that throws leaves the stub looking healthy: callback
+    -- registered, watcher running, no hotkeys.
     check(
-      "the watcher watches lua/, not the config root",
-      RECORDED.watched and RECORDED.watched.path == STUBCFGDIR .. "/lua",
-      RECORDED.watched and RECORDED.watched.path
+      "it brings up the hand-written config",
+      not notifiedSince("Hammerspoon config failed to load", notifiedBefore) and package.loaded["lua.init"] ~= nil
     )
     check(
       "it reports no configdir drift when the path matches",
-      RECORDED.notified[#RECORDED.notified] ~= "Hammerspoon config dir drift"
+      not notifiedSince("Hammerspoon config dir drift", notifiedBefore)
     )
 
-    -- The reason the callback carries its own pcall: a raise per click cannot
-    -- be covered by the load-time one, and an uncaught raise drops the link.
+    check("it starts the reload watcher", RECORDED.watcherStarted == true)
+    check(
+      "the watcher watches lua/, not the config root",
+      RECORDED.watched and RECORDED.watched.path == hs.configdir .. "/lua",
+      RECORDED.watched and RECORDED.watched.path
+    )
+
+    -- The debounce is the only real branching in the stub: a non-Lua write must
+    -- not reload, and a second write must replace the pending timer rather than
+    -- queue another reload behind it.
+    local timersBefore = #RECORDED.timers
+    RECORDED.watched.fn({ "notes.txt" })
+    check("a non-Lua write arms nothing", #RECORDED.timers == timersBefore)
+
+    RECORDED.watched.fn({ "picker.lua" })
+    check("a Lua write arms a reload", #RECORDED.timers == timersBefore + 1)
+    local pending = RECORDED.timers[#RECORDED.timers]
+    check("the reload is debounced, not immediate", pending.seconds > 0 and RECORDED.reloaded == nil)
+
+    local stoppedBefore = RECORDED.timersStopped
+    RECORDED.watched.fn({ "browsers.lua" })
+    check("a second write replaces the pending reload", RECORDED.timersStopped == stoppedBefore + 1)
+
+    pending = RECORDED.timers[#RECORDED.timers]
+    pending.fn()
+    check("the debounce fires hs.reload", RECORDED.reloaded == 1, tostring(RECORDED.reloaded))
+
+    -- A delta, not a cumulative count: earlier sections leave alerts behind, so
+    -- a cumulative assertion passes even when dispatch does nothing.
+    local alertsBefore = #RECORDED.alerts
     hs.urlevent.httpCallback("https", "one.example", {}, "https://one.example", 1)
     check(
       "a clicked link reaches the picker rather than the fallback",
-      RECORDED.fallbackOpened == nil and #RECORDED.alerts > 0
+      #RECORDED.alerts == alertsBefore + 1 and RECORDED.fallbackOpened == nil,
+      "alerts+" .. (#RECORDED.alerts - alertsBefore)
     )
 
-    -- Force the dispatch to raise and prove the fallback catches it. This is
-    -- the path that keeps a broken router from losing the link outright.
-    local realTargets = package.loaded["browsers"].targets
-    package.loaded["browsers"].targets = nil
+    -- An empty target list is reachable: local.browsers.targets = [] is a legal
+    -- option value, and picker.lua raises on it deliberately. Forcing a nil
+    -- instead would prove the fallback only for a state nix cannot produce.
+    local savedTargets = browsers.targets
+    browsers.targets = {}
     local raised = pcall(hs.urlevent.httpCallback, "https", "two.example", {}, "https://two.example", 1)
-    package.loaded["browsers"].targets = realTargets
+    browsers.targets = savedTargets
     check("a raising dispatch does not propagate out of the callback", raised)
     check(
       "the fallback opens the link instead of dropping it",
@@ -514,9 +567,17 @@ if STUBLUA then
       RECORDED.fallbackOpened and RECORDED.fallbackOpened.bundle == STUBFALLBACK,
       RECORDED.fallbackOpened and RECORDED.fallbackOpened.bundle
     )
+
+    -- Reloaded against a configdir that does not match the one compiled in, to
+    -- exercise the other side of the drift branch. The check above only proves
+    -- it stays quiet when the paths agree.
+    local driftFrom = #RECORDED.notified
+    hs.configdir = "/wrong/hammerspoon"
+    local reloadedOk = pcall(dofile, STUBLUA)
+    hs.configdir = STUBCFGDIR
+    check("a drifted configdir still loads", reloadedOk)
+    check("a drifted configdir is reported", notifiedSince("Hammerspoon config dir drift", driftFrom))
   end
-else
-  check("STUBLUA was passed to the spec", false, "the flake check must build the stub and pass its path")
 end
 
 if failures == 0 then
