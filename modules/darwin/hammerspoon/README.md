@@ -39,15 +39,17 @@ Extensions are the wrong unit for the document types — UTIs are, and they coll
   rather than a hand-back, so it raises its own confirmation dialog the first time, and the claim is asynchronous —
   `duti` returns before the dialog is answered.
   `jhtml` is **not** claimed. Its dynamic UTI is one `duti` rejects outright (`error -50`), so listing it would
-  re-attempt an impossible claim, and wait out its 30s timeout, on every activation.
+  re-attempt an impossible claim on every activation. A rejection returns immediately rather than waiting the claim
+  out — that distinction is why the claim helper checks `duti`'s exit status before it starts polling.
 - **Put back** — `txt`, `text`, `url`. A `.url` is a shortcut file rather than web content — the picker hands the
   browser the file instead of following the link inside it — and `txt`/`text` are not web content at all.
 
-The restore runs on every activation rather than only on the one that claims `http`, because the document-type claims
-raise their own prompts and answering one transfers every type Hammerspoon declares. It restores from a snapshot taken
-at the start of the same run, so each claim is waited out before it runs; a prompt answered after activation has
-finished is still not repaired, since the next run sees the type already Hammerspoon's and has nothing to put it back
-to.
+The restore runs on every activation that is not a dry run — including ones where Hammerspoon is not running, or is
+running some other config. It reads and writes LaunchServices through `duti` and needs no live instance, and the
+runs where a type is most likely still stranded are exactly the ones where the claim is skipped. It restores from a
+snapshot taken at the start of the same run, so each claim is waited out before it runs; a prompt answered after
+activation has finished is still not repaired, since the next run sees the type already Hammerspoon's and has nothing
+to put it back to.
 
 **Known defects, deliberately left.** The input source is set synchronously right after `win:focus()`, so the async
 `windowFocused` handler never records the previous layout; the layout is also set immediately after
@@ -361,11 +363,13 @@ The reload watcher must point at `<cfgdir>/lua`, never at `<cfgdir>`. `hs.pathwa
 creating the FSEvents stream, so watching `lua/` follows into the repo and fires on edits there; watching the parent
 sees only a symlink entry and never fires.
 
-Activation does nothing at all under a dry run. The test is home-manager's own, `[[ -v DRY_RUN || "$parentArgs" ==
-*" --dry-run"* ]]`, and `-v` rather than `-n` is the load-bearing half: an exported but empty `DRY_RUN` is *set*, so
-home-manager previews on it, while a guard testing `-n` would restart Hammerspoon and raise the handler dialog beside
-a home-manager that changed nothing. `darwin-rebuild` routes `--dry-run` into build flags only and runs the activation
-script regardless, so without an explicit check a documented preview command would really restart Hammerspoon.
+Activation does nothing at all under a dry run, and the intent has to be recovered from the parent's argv.
+`darwin-rebuild` routes `--dry-run` into build flags only and runs the activation script regardless, so without an
+explicit check a documented preview command would really restart Hammerspoon and raise the handler dialog.
+
+home-manager's own guard also tests `$DRY_RUN`, and copying that half here would be cargo: nix-darwin's `activate`
+begins `#!/usr/bin/env -i …/bash`, so no environment is inherited and the variable can never be set. home-manager
+tests it because its *user* script is invoked as `env DRY_RUN=1 <script>`, which is a different process.
 
 Otherwise it restarts when `hs.configdir` does not yet match the configured path, and only reloads when it does. The
 restart branch is what makes the first switch work, since the preference is read once at launch.
