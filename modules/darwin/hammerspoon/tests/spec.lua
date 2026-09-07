@@ -392,10 +392,9 @@ local alertsBefore = #RECORDED.alerts
 local ok = pcall(router.dispatch, "file", nil, {}, "file:///tmp/x.html", -1)
 check("a nil host does not throw", ok)
 check("the router does not open anything itself", #RECORDED.launches == beforeRouter)
--- Asserting a delta, not a cumulative count: with `> 0` the check passed even
--- when dispatch did nothing at all, because earlier checks had left alerts
--- behind. present(nil) is also a silent no-op on the queue, so passing the
--- wrong argument has to be caught here too.
+-- A delta, not a cumulative count: earlier checks leave alerts behind, so a
+-- cumulative assertion passes even when dispatch does nothing. present(nil) is
+-- a silent no-op on the queue, so a wrong argument has to be caught here too.
 check("the router raises exactly one picker", #RECORDED.alerts == alertsBefore + 1)
 check(
   "the router hands the picker the full url",
@@ -409,9 +408,8 @@ check(
 )
 
 print("init.lua")
--- Loading the real entry point. It is the file this change rewired, and until
--- now nothing executed it: a typo in the hotkey loop or a renamed helper would
--- pass luac -p and then throw on the machine, leaving no hotkeys at all.
+-- Loading the real entry point: a typo in the hotkey loop or a renamed helper
+-- would pass luac -p and then throw on the machine, leaving no hotkeys at all.
 NAMES["com.mitchellh.ghostty"] = "Ghostty"
 local loaded, err = pcall(dofile, INITLUA)
 check("init.lua loads", loaded, tostring(err))
@@ -425,7 +423,7 @@ if loaded then
     end
   end
   check("every hyper hotkey binds", #missing == 0, "missing: " .. table.concat(missing, ","))
-  check("calendar moved off c, which is now a browser profile", RECORDED.binds["hyper:x"] ~= nil)
+  check("calendar is on x, since c belongs to a browser profile", RECORDED.binds["hyper:x"] ~= nil)
   check(
     "no browser target collides with an app hotkey",
     (function()

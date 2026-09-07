@@ -8,10 +8,17 @@ browser *profile* for an opened URL.
 Hammerspoon, its configuration, the link router, the picker and the hotkeys are all delivered from here. Activation
 claims the `http`/`https` handler, so a clicked link reaches the router.
 
-`local.browsers.claimDefaultHandler` still refuses while `/Applications/Hammerspoon.app` exists. That path is empty
+`local.browsers.claimDefaultHandler` still refuses while `/Applications/Hammerspoon.app` exists. That path is gone
 now, but the guard stays: two bundles sharing `org.hammerspoon.Hammerspoon` let LaunchServices decide which copy
-receives a link, and reinstalling the cask would silently reintroduce that. It is also idempotent, because macOS
-raises a confirmation dialog on every real change of the http handler.
+receives a link, and reinstalling the cask would silently reintroduce that. Activation also checks the current handler
+and calls out only when it is not already Hammerspoon's, because macOS raises a confirmation dialog on every real
+change.
+
+**The claim goes through `duti`, not `hs.urlevent.setDefaultHandler`** — the latter reports success and leaves the
+handler unchanged on macOS 26.6.2. Taking `http` also transfers the document types Hammerspoon's `Info.plist` claims.
+`txt`, `text` and `url` are put back afterwards; the web types are deliberately left with it, because on macOS they
+**are** the default-browser identity — moving one asks to change the browser back, and accepting that would undo the
+claim. They need no undoing: a web file opened into Hammerspoon arrives as a `file://` URL and reaches the picker.
 
 **Known defects, deliberately left.** The input source is set synchronously right after `win:focus()`, so the async
 `windowFocused` handler never records the previous layout; the layout is also set immediately after
@@ -218,8 +225,9 @@ then the profile's display name. `hs.window` is AX-backed, so `win:title()` sees
 That trailing name is `profiles::GetAvatarNameForProfile()` → `ProfileAttributesEntry::GetName()`, **not** the
 `Local State` `name` field this config reads. For a signed-in profile it is `<GAIA given name> (<Local State name>)`, so
 the title ends in `)` and a plain suffix test against the Local State name matches nothing — verified against this
-machine's live Chrome windows, where it was false for all three profiles. Match the tail against **both** forms,
-`<name>` and `… (<name>)`. Never a bare suffix and never an unanchored substring: `" - "` also occurs inside the page
+machine's live Chrome windows, where it was false for all three profiles. Match the tail against all **three** forms
+— `<name>`, `<gaia>` and `<gaia> (<name>)`, since a signed-in profile still carrying Chrome's default local name shows
+the GAIA name alone. Never a bare suffix and never an unanchored substring: `" - "` also occurs inside the page
 title, and the separator is localized (en dash in de/fr/fi, `$1 ($2)` in ru, `$1: $2` in pt-BR).
 
 **A tail miss means "not identified", and an unidentified window is not claimed — as long as the profile list could be
@@ -307,8 +315,8 @@ stale config. Recreating either would restore the failure mode rather than a saf
 ## `hs.ipc` is a privilege surface
 
 The stub calls `require("hs.ipc")` so activation can reload the config with `hs -c`. That opens a name-based Mach port
-with no authentication beyond the user session, and it was **not open before this module existed** — the CLI has never
-worked on this Mac.
+with no authentication beyond the user session, and it was **not open before this module existed** — before it, the
+CLI had never worked on this Mac.
 
 The consequence is worth stating plainly: any process running as this user can then execute arbitrary Lua inside
 Hammerspoon and inherit its Accessibility grant — synthesising keystrokes into any application, reading window

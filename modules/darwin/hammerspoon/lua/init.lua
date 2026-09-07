@@ -3,9 +3,8 @@ local browsers = require("browsers")
 local picker = require("picker")
 
 -- ─── Per-app US keyboard layout forcing ────────────────────────────
--- Forces US layout when these apps gain focus, restores on blur.
--- Uses hs.window.filter for reliable focus tracking, including
--- programmatic focus changes from hotkey toggles.
+-- A window filter rather than an app watcher: windowFocused also fires for the
+-- programmatic focus changes the hotkey toggles make.
 
 local forceUSApps = {
   ["Ghostty"] = true,
@@ -34,12 +33,9 @@ local function restorePreviousLayout()
   end
 end
 
--- Primary: track focus changes on all windows.
--- windowFocused fires for both user-initiated (Cmd+Tab, click) and
--- programmatic (win:focus(), app:unhide()) focus changes.
--- new(nil) is the default filter, which skips ignoreInDefaultFilter apps and
--- non-standard roles. new(true) would match everything, including transient
--- windows that then restore the layout mid-session. Unresolved — see SYSMI-63.
+-- new(nil), not new(true): the default filter's visible=true rule keeps
+-- Spotlight and Notification Center from restoring the layout mid-session.
+-- Both constructors have a failure mode — see the README and SYSMI-63.
 local focusFilter = hs.window.filter.new(nil)
 
 focusFilter:subscribe(hs.window.filter.windowFocused, function(win)
@@ -55,8 +51,8 @@ focusFilter:subscribe(hs.window.filter.windowFocused, function(win)
   end
 end)
 
--- Fallback: restore layout when a forceUS window disappears (hidden,
--- minimised, closed) and no other window immediately gains focus.
+-- windowFocused alone misses a window that disappears without another taking
+-- focus.
 local forceUSFilter = hs.window.filter.new(false)
 for name in pairs(forceUSApps) do
   forceUSFilter:setAppFilter(name, {})
@@ -75,8 +71,6 @@ end)
 
 -- ─── Custom layouts ────────────────────────────────────────────────
 
--- Chat: laptop fullscreen when lid open, else right side of active
--- screen (35% on widescreen, 50% on regular).
 local function chatLayout(screen)
   local builtIn = whu.builtInScreen()
   if builtIn then
@@ -106,7 +100,7 @@ whu.bindToggle("i", "com.microsoft.teams2", chatLayout)
 whu.bindToggle("f", "com.apple.finder", whu.corner("topleft", 800, 600, 10))
 
 -- Calendar (hyper+x) — no resize, just center on active screen.
--- Moved off c, which now belongs to a browser profile.
+-- Not c: that key belongs to a browser profile.
 whu.bindToggle("x", "com.apple.iCal", whu.center())
 
 -- Obsidian (hyper+j) — US layout via forceUSApps

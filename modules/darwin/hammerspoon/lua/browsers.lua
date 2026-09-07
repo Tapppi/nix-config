@@ -328,7 +328,7 @@ function M.toggle(target, layoutFn)
   whu.applyLayout(win, layoutFn)
   win:focus()
 
-  -- Matches what whu.bindToggle did for these keys before they moved here.
+  -- Browsers are typed in, not just clicked, so the layout goes back.
   whu.setInputSource(whu.fiProg)
 end
 

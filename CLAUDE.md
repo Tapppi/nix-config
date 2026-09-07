@@ -163,10 +163,10 @@ architecture. The apps in `apps/<system>/` resolve the hostname themselves via
 `scutil --get LocalHostName`, overridable with `DARWIN_HOST`.
 
 ```bash
-# Check the flake configuration. Since SYSMI-63 this is not a no-op: it parses
-# the Hammerspoon Lua with the same Lua 5.4 the app embeds and holds it to
-# stylua.toml. That Lua is symlinked out of the store, so no build can catch a
-# syntax error in it — this check is the only thing that does.
+# Not a no-op: it parses the Hammerspoon Lua with the same Lua 5.4 the app
+# embeds, holds it to stylua.toml, and then runs it against a stub hs. That Lua
+# is symlinked out of the store, so no build ever loads it — this is the only
+# thing that does.
 nix flake check
 
 # macOS (darwin) — asterix
@@ -262,7 +262,7 @@ Active on `asterix` — these are imported by `hosts/darwin-minimal/`:
 
 - **session-sync.nix**: launchd agent mirroring `~/.claude/` to the homelab archive
 - **herdr.nix**: the agent multiplexer, plus its generated config
-- **hammerspoon/**: the Hammerspoon application and its configuration. Read its
+- **hammerspoon/**: the Hammerspoon application, its configuration, link routing and hotkeys. Read its
   `README.md` before touching it — the config path, the module name the stub
   requires and the restart-vs-reload branch each prevent a specific failure
 
