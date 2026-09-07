@@ -147,12 +147,12 @@
               # of everything else, so a fixed /tmp name would let any local
               # process shadow the modules under test — and this flake is built
               # without the sandbox.
+              #
+              # The bundle the stub hard-codes. Restated here so the spec fails
+              # if that ever changes to something not present on every Mac.
               stubFallback = "com.apple.Safari";
               stub = pkgs.writeText "hammerspoon-init-under-test.lua"
-                (import ./modules/darwin/hammerspoon/stub.nix {
-                  cfgDir = "@stubCfgDir@";
-                  fallbackBundle = stubFallback;
-                });
+                (import ./modules/darwin/hammerspoon/stub.nix { cfgDir = "@stubCfgDir@"; });
             in
             pkgs.runCommand "hammerspoon-lua-check"
             { nativeBuildInputs = [ pkgs.lua5_4 pkgs.stylua ]; } ''

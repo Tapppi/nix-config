@@ -4,7 +4,7 @@
 # it. It is the one file whose failure loses every clicked link on the machine,
 # and nothing else executes it: home.file gets the built store path, and the
 # hand-written modules under lua/ are what the rest of the suite covers.
-{ cfgDir, fallbackBundle }:
+{ cfgDir }:
 
 let
   luaStr = import ./lua-str.nix;
@@ -23,10 +23,15 @@ in
       end)
       if not dispatched then
         print("hammerspoon: router failed, falling back: " .. tostring(err))
+        -- Safari, hard-coded: this runs precisely when the configured targets
+        -- could not be loaded, so it must name a bundle that is always present
+        -- and depend on nothing outside this file. The profile is whichever
+        -- Safari last used — a link in the wrong profile is recoverable, a link
+        -- that goes nowhere is not.
         -- pcall because openURLWithBundle raises on a non-string argument
         -- rather than returning false, and its boolean only reports that
         -- LaunchServices opened the bundle.
-        pcall(hs.urlevent.openURLWithBundle, fullURL, ${luaStr fallbackBundle})
+        pcall(hs.urlevent.openURLWithBundle, fullURL, "com.apple.Safari")
       end
     end
 

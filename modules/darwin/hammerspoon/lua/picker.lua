@@ -11,15 +11,25 @@ local M = {}
 local browsers = require("browsers")
 
 -- Long enough to read the rows, short enough that a modal entered by mistake
--- returns the keyboard quickly.
-M.timeout = 10
+-- returns the keyboard quickly. Refreshed by every link that joins the queue.
+M.timeout = 15
 
-local state = { modal = nil, alert = nil, queue = {}, timer = nil }
+-- The refresh above has no fixed point on its own: links arriving faster than
+-- the countdown would hold every bound key machine-wide for as long as they
+-- kept coming. This is the longest one picker can hold the keyboard, whatever
+-- arrives.
+M.maxHold = 60
+
+local state = { modal = nil, alert = nil, queue = {}, timer = nil, ceiling = nil }
 
 local function dismiss()
   if state.timer then
     state.timer:stop()
     state.timer = nil
+  end
+  if state.ceiling then
+    state.ceiling:stop()
+    state.ceiling = nil
   end
   if state.alert then
     hs.alert.closeSpecific(state.alert)
@@ -43,6 +53,69 @@ local function choose(target)
   for _, url in ipairs(drain()) do
     browsers.launch(target, url)
   end
+end
+
+--- What both timers do when they run out: route rather than drop, because a
+--- dropped link is invisible and leaves the user with nothing.
+local function expire()
+  local fallback = browsers.targets[1]
+  if fallback then
+    choose(fallback)
+  else
+    dismiss()
+    drain()
+  end
+end
+
+--- Put the queue on screen and hold the keyboard until something answers it.
+---
+--- Fallible: the profile names are read off disk. present() drains the queue if
+--- any of this raises.
+local function offer()
+  -- Reopened so the queue count is visible.
+  local reopening = state.alert ~= nil
+  if reopening then
+    hs.alert.closeSpecific(state.alert)
+    state.alert = nil
+  end
+
+  local rows = {}
+  for _, target in ipairs(browsers.targets) do
+    rows[#rows + 1] = target.key .. "   " .. browsers.label(target)
+  end
+  if #state.queue > 1 then
+    rows[#rows + 1] = ""
+    rows[#rows + 1] = #state.queue .. " links queued"
+  end
+  rows[#rows + 1] = ""
+  rows[#rows + 1] = "esc   cancel"
+
+  -- Outlive the timeout, so the modal is never entered with nothing on screen
+  -- to explain why the keyboard is behaving oddly.
+  -- No screen argument: hs.alert scans optional arguments with ipairs, so a nil
+  -- would truncate the scan and drop the duration to 2s while the modal held
+  -- the keyboard for the full timeout.
+  state.alert = hs.alert.show(table.concat(rows, "\n"), {
+    textSize = 18,
+    radius = 8,
+  }, M.timeout + 1)
+
+  -- Armed before the modal is entered, so the modal cannot outlive it. The
+  -- countdown belongs to the newest link, so it restarts; the ceiling belongs
+  -- to the picker and is armed once.
+  if state.timer then
+    state.timer:stop()
+  end
+  state.timer = hs.timer.doAfter(M.timeout, expire)
+  if not state.ceiling then
+    state.ceiling = hs.timer.doAfter(M.maxHold, expire)
+  end
+
+  if reopening then
+    return
+  end
+
+  state.modal:enter()
 end
 
 --- Bind the modal once, at load. Rebinding per link would leak a hotkey set
@@ -83,56 +156,11 @@ function M.present(url)
 
   state.queue[#state.queue + 1] = url
 
-  -- Reopened so the queue count is visible. The timer is not restarted, or a
-  -- trickle of links would hold the keyboard indefinitely.
-  local reopening = state.alert ~= nil
-  if reopening then
-    hs.alert.closeSpecific(state.alert)
-    state.alert = nil
-  end
-
-  local rows = {}
-  for _, target in ipairs(browsers.targets) do
-    rows[#rows + 1] = target.key .. "   " .. browsers.label(target)
-  end
-  if #state.queue > 1 then
-    rows[#rows + 1] = ""
-    rows[#rows + 1] = #state.queue .. " links queued"
-  end
-  rows[#rows + 1] = ""
-  rows[#rows + 1] = "esc   cancel"
-
-  -- Outlive the timeout, so the modal is never entered with nothing on screen
-  -- to explain why the keyboard is behaving oddly.
-  -- No screen argument: hs.alert scans optional arguments with ipairs, so a nil
-  -- would truncate the scan and drop the duration to 2s while the modal held
-  -- the keyboard for the full timeout.
-  state.alert = hs.alert.show(table.concat(rows, "\n"), {
-    textSize = 18,
-    radius = 8,
-  }, M.timeout + 1)
-
-  if reopening then
-    return
-  end
-
-  -- Armed before entering, so the modal cannot outlive it.
-  state.timer = hs.timer.doAfter(M.timeout, function()
-    local fallback = browsers.targets[1]
-    if fallback then
-      choose(fallback)
-    else
-      dismiss()
-      drain()
-    end
-  end)
-
-  -- Otherwise the armed timer still fires and opens the link a second time, on
-  -- top of whatever the stub's fallback already did.
-  local entered, err = pcall(function()
-    state.modal:enter()
-  end)
-  if not entered then
+  -- Every raise out of offer() reaches the stub's fallback, which opens the
+  -- link. A queue still holding it would open it a second time on the next
+  -- link's keypress — and a timer left armed would open it a third.
+  local offered, err = pcall(offer)
+  if not offered then
     dismiss()
     drain()
     error(err, 0)

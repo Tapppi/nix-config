@@ -230,8 +230,10 @@ title, and the separator is localized (en dash in de/fr/fi, `$1 ($2)` in ru, `$1
 read at all.** That qualifier is load-bearing. Profile names are read from `Local State`, and this config only knows
 where to find that file for Chrome, Brave, Edge and Vivaldi; for any other bundle it cannot tell one profile's windows
 from another's, so it claims all of them and says so once on the console. Two targets sharing such a bundle would fight
-over one window. Adding a browser means adding its `Local State` path in `browsers.lua`, and nothing in the nix option
-checks that you did.
+over one window. Adding a browser means adding its `Local State` path in `browsers.lua`; a target that names a
+`profileDir` on a bundle missing from that table fails the build, and the assertion reads the table out of
+`browsers.lua` rather than restating it. A target with no `profileDir` is left alone — it asks for every window of its
+bundle, which is what an unreadable list gives it anyway.
 
 Where the list *is* readable, not claiming is the safe direction — claiming the wrong window would put a client's links
 in front of the wrong profile — but it is not free.
@@ -272,8 +274,13 @@ Two behaviours are choices rather than consequences, and either could reasonably
 
 - **A second link while the picker is up joins a queue**, and one choice then opens all of them. Clicking several
   links in a burst is what this serves. The alternative silently drops every link but one.
-- **The timeout routes to the first target rather than dropping the link.** A dropped link is invisible and leaves the
-  user with nothing; reorder `local.browsers.targets` to change which target that is.
+- **Each queued link restarts the countdown**, so the newest link gets a full `picker.timeout` to be answered rather
+  than the remainder of the first one's. That has no fixed point on its own — links arriving faster than the countdown
+  would hold the keyboard for as long as they kept coming — so a second timer, `picker.maxHold`, is armed once per
+  picker and never restarted. Whichever runs out first ends it.
+- **Running out of time routes to the first target rather than dropping the link**, and both timers do the same thing.
+  A dropped link is invisible and leaves the user with nothing; reorder `local.browsers.targets` to change which
+  target that is.
 
 ### Two limits worth knowing before debugging one of them
 
@@ -283,10 +290,11 @@ So a browser window that is fullscreen or on another Space is invisible to the h
 you get a duplicate window on the current Space. It is self-correcting — the next press finds that new window — and it
 does not affect link routing, which always goes through `open`.
 
-**The stub's crash fallback cannot carry a profile.** `openURLWithBundle` takes a bundle id and nothing else, so when
-the router itself fails the link opens in whichever profile of that browser was last used. That is the price of a
-fallback that depends on nothing outside the generated stub, and it is the right trade: a link in the wrong profile is
-recoverable, a link that goes nowhere is not.
+**The stub's crash fallback is hard-coded Safari, and cannot carry a profile.** It runs precisely when the configured
+targets could not be loaded, so it may not depend on them; Safari is the one bundle guaranteed to be present.
+`openURLWithBundle` takes a bundle id and nothing else, so the link lands in whichever Safari profile was last used.
+That is the price of a fallback that depends on nothing outside the generated stub, and it is the right trade: a link
+in the wrong browser is recoverable, a link that goes nowhere is not.
 
 ## Testing
 
