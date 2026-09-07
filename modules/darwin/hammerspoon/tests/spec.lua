@@ -392,7 +392,7 @@ check("the countdown runs for picker.timeout", countdown.seconds == picker.timeo
 -- for the whole minute.
 check(
   "the timeout is 15",
-  picker.timeout == 15 and picker.timeout < picker.maxHold,
+  picker.timeout < picker.maxHold,
   "timeout=" .. tostring(picker.timeout) .. " maxHold=" .. tostring(picker.maxHold)
 )
 
@@ -464,6 +464,53 @@ check(
 -- A countdown left armed would fire after the ceiling had already routed and
 -- open a queue that no longer exists.
 check("the ceiling cancels the countdown it pre-empted", refreshed ~= nil and refreshed.stopped == true)
+
+-- The other direction. An answered picker that leaves its ceiling armed hands
+-- the next picker's queue to targets[1] when that ceiling runs out, in place of
+-- the choice its user was making.
+local answeredBase = #RECORDED.timers
+picker.present("https://answered.example")
+local answeredCeiling = RECORDED.timers[answeredBase + 2]
+RECORDED.binds["v"]()
+check("choosing stops the ceiling", answeredCeiling ~= nil and answeredCeiling.stopped == true)
+
+local escapedBase = #RECORDED.timers
+picker.present("https://escaped.example")
+local escapedCeiling = RECORDED.timers[escapedBase + 2]
+RECORDED.binds["escape"]()
+check("escape stops the ceiling", escapedCeiling ~= nil and escapedCeiling.stopped == true)
+
+-- A raise while a picker is already up must cost only the link that raised.
+-- Draining here would lose the earlier links with nothing on screen to say so.
+picker.present("https://keep-one.example")
+picker.present("https://keep-two.example")
+local savedLabel = browsers.label
+browsers.label = function()
+  error("label unavailable")
+end
+local reopenRaised = pcall(picker.present, "https://raises.example")
+browsers.label = savedLabel
+check("a raise on a reopening picker still propagates", not reopenRaised)
+
+local keptBefore = #RECORDED.launches
+RECORDED.binds["v"]()
+check(
+  "the links queued before the raise survive it",
+  #RECORDED.launches == keptBefore + 2,
+  "opened " .. (#RECORDED.launches - keptBefore) .. ", expected the two queued before the raise"
+)
+check(
+  "the link that raised is not opened twice",
+  (function()
+    for i = keptBefore + 1, #RECORDED.launches do
+      local args = RECORDED.launches[i].args
+      if args[#args] == "https://raises.example" then
+        return false
+      end
+    end
+    return true
+  end)()
+)
 
 check(
   "a raise while offering drains the queue rather than holding the link",

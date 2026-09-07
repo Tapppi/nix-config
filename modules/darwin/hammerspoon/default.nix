@@ -23,13 +23,21 @@ let
   # the assertion below is meant to prevent.
   supportedBundles =
     let
-      block = builtins.match ".*M\\.localState = [{]([^}]*)[}].*" (builtins.readFile ./lua/browsers.lua);
-      keys = builtins.filter builtins.isList (builtins.split "[[]\"([^\"]+)\"[]]" (builtins.head block));
+      lines = lib.splitString "\n" (builtins.readFile ./lua/browsers.lua);
+      openIdx = lib.lists.findFirstIndex (l: builtins.match "M\\.localState = [{]" l != null) null lines;
+      rest = lib.lists.sublist (openIdx + 1) (builtins.length lines) lines;
+      # builtins.match anchors on the whole line, so the body ends at the
+      # table's own closing brace in column 0 and a nested table value cannot
+      # truncate the list. Each key is matched on its own line, so a
+      # commented-out entry cannot join it.
+      closeIdx = lib.lists.findFirstIndex (l: builtins.match "[}].*" l != null) null rest;
+      body = if closeIdx == null then rest else lib.lists.sublist 0 closeIdx rest;
+      keys = builtins.filter (m: m != null) (
+        map (l: builtins.match "[[:space:]]*[[]\"([^\"]+)\"[]][[:space:]]*=.*" l) body
+      );
     in
-    if block == null then
+    if openIdx == null then
       throw "hammerspoon: no M.localState table in lua/browsers.lua; the supported-bundle assertion cannot be derived"
-    else if keys == [ ] then
-      throw "hammerspoon: M.localState in lua/browsers.lua yielded no bundle ids"
     else
       map builtins.head keys;
 
