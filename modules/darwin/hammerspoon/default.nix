@@ -1,7 +1,7 @@
 # Hammerspoon: the application, and the configuration it runs.
 #
-# Several choices here fail in ways the code cannot show. ./README.md explains
-# each; the comments below say only why, not how they were arrived at.
+# Several choices here fail in ways the code cannot show; ./README.md explains
+# each.
 { config, pkgs, lib, ... }:
 
 let
@@ -329,8 +329,8 @@ in
         if [ "$have" = '${cfgDir}' ]; then
           asUser ${hammerspoon}/bin/hs -a -t 5 -c 'hs.reload()' >/dev/null 2>&1 || true
         else
-          # Verified rather than assumed: shutdown handlers can outlast a
-          # fixed sleep, and `open -a` on a live instance only activates it.
+          # Shutdown handlers can outlast a fixed sleep, and `open -a` on a
+          # live instance only activates it.
           /usr/bin/killall Hammerspoon >/dev/null 2>&1 || true
 
           for _ in 1 2 3 4 5 6 7 8 9 10; do
@@ -360,8 +360,8 @@ in
           fi
         fi
       else
-        # Nothing to restart. The login item starts this bundle at login, so
-        # this is the first-activation case rather than a steady state.
+        # The login item starts this bundle at login, so a missing process
+        # means it was quit, not that it was never configured.
         echo "  hammerspoon: not running; start ${appPath} to pick up the new config." >&2
       fi
       ''

@@ -1,4 +1,3 @@
--- window-hotkey-utils.lua
 -- Window management utilities for hotkey-driven app toggling and layout.
 
 local M = {}
@@ -9,7 +8,7 @@ M.fiProg = "org.sil.ukelele.keyboardlayout.finnishprogrammerkeyboard.finnish-pro
 
 -- ─── Input source ─────────────────────────────────────────────────
 
--- Retry-aware input source setter (macOS bug workaround, Hammerspoon #1429).
+-- Retried once: macOS drops the first set (Hammerspoon #1429).
 function M.setInputSource(sourceID)
   hs.keycodes.currentSourceID(sourceID)
   hs.timer.doAfter(0.05, function()
@@ -118,9 +117,8 @@ end
 
 --- Position a window with a layout function, if there is anything to do.
 ---
---- Every caller shared this same three-part idiom. Centralising it also states
---- the contract once: a nil layoutFn means "never reposition", which is how
---- toggle-only bindings are expressed.
+--- A nil layoutFn means "never reposition", which is how toggle-only bindings
+--- are expressed.
 function M.applyLayout(win, layoutFn)
   if not win or not layoutFn then
     return false
@@ -167,7 +165,6 @@ function M.bindToggle(key, bundleID, layoutFn, opts)
     inputSource = opts.inputSource
   end
 
-  -- Optional: watch for newly created windows and auto-position them.
   -- Track whether the filter was actually created: nameForBundleID returns nil
   -- for an app LaunchServices has not registered, and the option alone is no
   -- proof the filter exists.
@@ -193,7 +190,8 @@ function M.bindToggle(key, bundleID, layoutFn, opts)
       if inputSource then
         M.setInputSource(inputSource)
       end
-      -- Position the window once the app finishes launching.
+      -- The window does not exist yet, so position it once the launch has
+      -- produced one.
       if layoutFn and not watching then
         hs.timer.doAfter(1.5, function()
           local a = hs.application.get(bundleID)
