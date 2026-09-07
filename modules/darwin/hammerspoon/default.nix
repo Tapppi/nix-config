@@ -24,10 +24,6 @@ let
   # activation; the store path is not a usable launch target.
   appPath = "/Applications/Nix Apps/Hammerspoon.app";
 
-  # Where a Homebrew cask would put its copy. It carries the same bundle id as
-  # this one, which is why its presence blocks the handler claim below.
-  cask = "/Applications/Hammerspoon.app";
-
   bundleId = "org.hammerspoon.Hammerspoon";
 
   # What Hammerspoon claims but cannot route. Web types are excluded: they are
@@ -255,9 +251,6 @@ in
       Make Hammerspoon the system handler for http and https, so clicked links
       reach the router.
 
-      Refuses while a second bundle claiming `org.hammerspoon.Hammerspoon` is
-      installed, because LaunchServices then picks which copy receives a link.
-
       Hammerspoon's Info.plist also claims html, txt, url and `*`, which macOS
       transfers along with the browser. Web types are left with it — they open
       as file:// URLs and reach the picker — but the rest are put back.
@@ -369,10 +362,6 @@ in
 
       if [ -n "''${DRY_RUN:-}" ] || /bin/ps -o args= -p "$PPID" 2>/dev/null | /usr/bin/grep -q -- ' --dry-run'; then
         :
-      elif [ -e ${lib.escapeShellArg cask} ]; then
-        # A second bundle with this id is installed, so LaunchServices — not
-        # this config — would decide which copy receives a link.
-        echo "  hammerspoon: not claiming the http handler; ${cask} is still installed." >&2
       elif ! /usr/bin/pgrep -qx Hammerspoon >/dev/null 2>&1; then
         echo "  hammerspoon: not running; cannot claim the http handler." >&2
       else

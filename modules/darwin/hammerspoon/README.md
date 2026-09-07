@@ -8,11 +8,8 @@ browser *profile* for an opened URL.
 Hammerspoon, its configuration, the link router, the picker and the hotkeys are all delivered from here. Activation
 claims the `http`/`https` handler, so a clicked link reaches the router.
 
-`local.browsers.claimDefaultHandler` still refuses while `/Applications/Hammerspoon.app` exists. That path is gone
-now, but the guard stays: two bundles sharing `org.hammerspoon.Hammerspoon` let LaunchServices decide which copy
-receives a link, and reinstalling the cask would silently reintroduce that. Activation also checks the current handler
-and calls out only when it is not already Hammerspoon's, because macOS raises a confirmation dialog on every real
-change.
+Activation checks the current handler and calls out only when it is not already Hammerspoon's, because macOS raises a
+confirmation dialog on every real change.
 
 **The claim goes through `duti`, not `hs.urlevent.setDefaultHandler`** — the latter reports success and leaves the
 handler unchanged on macOS 26.6.2. Taking `http` also transfers the document types Hammerspoon's `Info.plist` claims.
@@ -45,9 +42,8 @@ sharply, it is because it was checked; where it is hedged, the hedge is the find
 
 ## Why the app is packaged here rather than left to Homebrew
 
-Hammerspoon is not in nixpkgs, so it is packaged from its GitHub release. That sidesteps the deferred `nix-homebrew`
-wiring, which stays deferred because `autoMigrate = true` would take over the Homebrew installs `macos-setup` still
-owns for everything else.
+Hammerspoon is not in nixpkgs, so it is packaged from its GitHub release. When Homebrew installation migrates to
+`systems`, the packaging and installation mechanism should be re-evaluated.
 
 The usual objection is that nix-installing a macOS GUI app breaks TCC, and Hammerspoon is useless without
 Accessibility. It does not apply to this package, for reasons narrower than "nix is fine now":
