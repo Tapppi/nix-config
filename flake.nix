@@ -137,15 +137,29 @@
       checks = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in {
-          hammerspoon-lua = pkgs.runCommand "hammerspoon-lua-check"
+          hammerspoon-lua =
+            let
+              # The stub the module generates, built with test values so the
+              # suite can execute the real thing rather than a copy of it.
+              stubCfgDir = "/tmp/hammerspoon-check";
+              stubFallback = "com.apple.Safari";
+              stub = pkgs.writeText "hammerspoon-init-under-test.lua"
+                (import ./modules/darwin/hammerspoon/stub.nix {
+                  cfgDir = stubCfgDir;
+                  fallbackBundle = stubFallback;
+                });
+            in
+            pkgs.runCommand "hammerspoon-lua-check"
             { nativeBuildInputs = [ pkgs.lua5_4 pkgs.stylua ]; } ''
             cp -r ${./modules/darwin/hammerspoon/lua} lua
             cp -r ${./modules/darwin/hammerspoon/tests} tests
             cp ${./stylua.toml} stylua.toml
+            cp ${stub} stub.lua
             chmod -R u+w lua tests
 
             # find, not a glob: subdirectories must be checked too.
             find lua tests -name '*.lua' -print0 | xargs -0 -n1 luac -p
+            luac -p stub.lua
 
             stylua --check lua tests
 
@@ -154,10 +168,15 @@
             # profile matching, the launch argv and the picker sequencing.
             # HOME is set because the modules derive the Local State paths from
             # it, and the sandbox provides none.
+            # $PWD/?.lua resolves the stub's dotted require("lua.router") and
+            # require("lua.init"); fixtures/ resolves its require("hs.ipc").
             HOME="$PWD/fakehome" lua \
               -e "HARNESS='$PWD/tests/harness.lua'" \
               -e "INITLUA='$PWD/lua/init.lua'" \
-              -e "package.path='$PWD/lua/?.lua;$PWD/tests/fixtures/?.lua;'..package.path" \
+              -e "STUBLUA='$PWD/stub.lua'" \
+              -e "STUBCFGDIR='${stubCfgDir}'" \
+              -e "STUBFALLBACK='${stubFallback}'" \
+              -e "package.path='$PWD/?.lua;$PWD/lua/?.lua;$PWD/tests/fixtures/?.lua;'..package.path" \
               tests/spec.lua
 
             touch "$out"

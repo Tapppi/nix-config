@@ -202,10 +202,27 @@ _G.hs = {
     end,
   },
   pathwatcher = {
-    new = function()
-      return { start = function() end }
+    new = function(path, fn)
+      recorded.watched = { path = path, fn = fn }
+      return {
+        start = function()
+          recorded.watcherStarted = true
+        end,
+      }
     end,
   },
+  -- The stub registers the http callback and reaches for a fallback when
+  -- dispatch raises. Both are recorded rather than performed.
+  urlevent = {
+    openURLWithBundle = function(url, bundle)
+      recorded.fallbackOpened = { url = url, bundle = bundle }
+      return true
+    end,
+  },
+  reload = function()
+    recorded.reloaded = (recorded.reloaded or 0) + 1
+  end,
+  configdir = nil,
   screen = {
     mainScreen = function()
       return _G.SCREEN
@@ -228,8 +245,12 @@ _G.hs = {
     end,
   },
   alert = {
-    show = function(text)
+    -- Style and duration are recorded, not just the text. The regression
+    -- picker.lua guards against is an alert that under-lives its modal, which
+    -- is invisible to a stub that keeps only the first argument.
+    show = function(text, style, duration)
       recorded.alerts[#recorded.alerts + 1] = text
+      recorded.alertShown = { text = text, style = style, duration = duration }
       return "alert-" .. #recorded.alerts
     end,
     closeSpecific = function(id)
