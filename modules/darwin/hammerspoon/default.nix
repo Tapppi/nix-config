@@ -16,9 +16,28 @@ let
   luaDir = config.local.hammerspoon.luaDir;
   browsers = config.local.browsers.targets;
 
-  # The stub's fallback must not depend on anything loaded at runtime. Safari
-  # only when no target exists at all, since it is always present.
-  fallbackBundle = if browsers == [ ] then "com.apple.Safari" else (builtins.head browsers).bundle;
+  # The bundles whose profile list lua/browsers.lua can read, taken from the
+  # module itself so the two cannot drift. Read here rather than restated,
+  # because the paths that make a bundle supported have to live next to the
+  # code that reads them, and a second copy in this option would be the thing
+  # the assertion below is meant to prevent.
+  supportedBundles =
+    let
+      block = builtins.match ".*M\\.localState = [{]([^}]*)[}].*" (builtins.readFile ./lua/browsers.lua);
+      keys = builtins.filter builtins.isList (builtins.split "[[]\"([^\"]+)\"[]]" (builtins.head block));
+    in
+    if block == null then
+      throw "hammerspoon: no M.localState table in lua/browsers.lua; the supported-bundle assertion cannot be derived"
+    else if keys == [ ] then
+      throw "hammerspoon: M.localState in lua/browsers.lua yielded no bundle ids"
+    else
+      map builtins.head keys;
+
+  # profileDir is what makes an unreadable bundle harmful: without one the
+  # target wants every window of the app anyway, which is what it gets.
+  unsupported = lib.unique (
+    map (t: t.bundle) (lib.filter (t: t.profileDir != null && !(lib.elem t.bundle supportedBundles)) browsers)
+  );
 
   # The bundle is rsynced to a stable path by nix-darwin's applications
   # activation; the store path is not a usable launch target.
@@ -95,9 +114,7 @@ let
   # Generated, and kept deliberately small: everything that can fail is loaded
   # through pcall from here, so a syntax error in a hand-edited module cannot
   # stop the parts that must always run.
-  initLua = checkedLua "hammerspoon-init.lua" (import ./stub.nix {
-    inherit cfgDir fallbackBundle;
-  });
+  initLua = checkedLua "hammerspoon-init.lua" (import ./stub.nix { inherit cfgDir; });
 in
 {
   options.local.hammerspoon.luaDir = lib.mkOption {
@@ -221,6 +238,16 @@ in
       {
         assertion = lib.length (lib.unique (map (t: t.key) browsers)) == lib.length browsers;
         message = "local.browsers.targets: duplicate key. Each key binds one hotkey and one picker row.";
+      }
+      # Degrades silently otherwise: with no profile list every window of the
+      # bundle matches every target naming it, so two of them fight over one.
+      {
+        assertion = unsupported == [ ];
+        message =
+          "local.browsers.targets: profileDir is set on ${lib.concatStringsSep ", " unsupported}, "
+          + "whose profile list lua/browsers.lua cannot read. It knows "
+          + "${lib.concatStringsSep ", " supportedBundles}; add this browser's Local State path to "
+          + "M.localState there, or drop profileDir to accept every window of the bundle.";
       }
     ];
 

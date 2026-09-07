@@ -379,12 +379,22 @@ check(
   "delta=" .. (RECORDED.exited - exitedBeforeEscape)
 )
 
+local timersBefore = #RECORDED.timers
 picker.present("https://four.example")
 check("escape cleared the queue", RECORDED.alerts[#RECORDED.alerts]:find("queued") == nil)
+local countdown = RECORDED.timers[timersBefore + 1]
 local beforeTimeout = #RECORDED.launches
-RECORDED.timerFn()
+countdown.fn()
 check("the timeout routes rather than dropping the link", #RECORDED.launches - beforeTimeout == 1)
-check("the timeout is bounded", RECORDED.timerAfter and RECORDED.timerAfter <= 30, tostring(RECORDED.timerAfter))
+check("the countdown runs for picker.timeout", countdown.seconds == picker.timeout, tostring(countdown.seconds))
+-- A timeout raised past the ceiling would make itself unreachable: the ceiling
+-- would pre-empt every countdown, and one ordinary link would hold the keyboard
+-- for the whole minute.
+check(
+  "the timeout is 15",
+  picker.timeout == 15 and picker.timeout < picker.maxHold,
+  "timeout=" .. tostring(picker.timeout) .. " maxHold=" .. tostring(picker.maxHold)
+)
 
 check(
   "an empty target list raises rather than swallowing the link",
@@ -396,6 +406,89 @@ check(
     -- Raising is what reaches the stub's hard-coded openURLWithBundle fallback.
     return ok == false
   end)()
+)
+
+print("picker queue")
+-- Two timers per picker: the countdown, which every later link restarts, and
+-- the ceiling, which nothing does.
+local queueBase = #RECORDED.timers
+picker.present("https://q1.example")
+local firstCountdown = RECORDED.timers[queueBase + 1]
+local ceiling = RECORDED.timers[queueBase + 2]
+check(
+  "a first link arms a countdown and a ceiling",
+  #RECORDED.timers == queueBase + 2
+    and firstCountdown ~= nil
+    and firstCountdown.seconds == picker.timeout
+    and ceiling ~= nil
+    and ceiling.seconds == picker.maxHold,
+  "armed " .. (#RECORDED.timers - queueBase) .. " timers"
+)
+
+picker.present("https://q2.example")
+local refreshed = RECORDED.timers[queueBase + 3]
+-- Without the refresh, a link clicked at the end of the countdown leaves a
+-- fraction of a second to read the rows and choose for it.
+check(
+  "a second link refreshes the countdown",
+  firstCountdown ~= nil
+    and firstCountdown.stopped == true
+    and refreshed ~= nil
+    and refreshed ~= firstCountdown
+    and refreshed.seconds == picker.timeout,
+  "old stopped="
+    .. tostring(firstCountdown and firstCountdown.stopped)
+    .. " new="
+    .. tostring(refreshed and refreshed.seconds)
+)
+-- The refresh is what makes a ceiling necessary. If a link re-armed it too,
+-- links arriving faster than the countdown would hold every bound key
+-- machine-wide for as long as they kept coming.
+check(
+  "the ceiling is armed once and no link re-arms it",
+  ceiling ~= nil and ceiling.stopped == false and #RECORDED.timers == queueBase + 3,
+  "armed " .. (#RECORDED.timers - queueBase) .. " timers, ceiling stopped=" .. tostring(ceiling and ceiling.stopped)
+)
+
+local beforeCeiling = #RECORDED.launches
+if ceiling then
+  ceiling.fn()
+end
+-- The ceiling ends the picker, not one link of it, and it routes for the same
+-- reason the countdown does: a dropped link leaves the user with nothing.
+check(
+  "the ceiling routes the whole queue rather than dropping it",
+  #RECORDED.launches - beforeCeiling == 2,
+  "delta=" .. (#RECORDED.launches - beforeCeiling)
+)
+-- A countdown left armed would fire after the ceiling had already routed and
+-- open a queue that no longer exists.
+check("the ceiling cancels the countdown it pre-empted", refreshed ~= nil and refreshed.stopped == true)
+
+check(
+  "a raise while offering drains the queue rather than holding the link",
+  (function()
+    -- The rows carry profile names read off disk, so this section really can
+    -- raise. When it does, the raise reaches the stub's fallback and the link
+    -- is opened there; a queue still holding it opens it a second time, in a
+    -- different profile, on the next link's keypress.
+    local realLabel = browsers.label
+    browsers.label = function()
+      error("Local State unreadable", 0)
+    end
+    local offered = pcall(picker.present, "https://raised.example")
+    browsers.label = realLabel
+    if offered then
+      return false
+    end
+
+    local before = #RECORDED.launches
+    picker.present("https://next.example")
+    local queued = RECORDED.alerts[#RECORDED.alerts]:find("queued") ~= nil
+    RECORDED.binds["b"]()
+    return not queued and #RECORDED.launches - before == 1
+  end)(),
+  "the raised link must reach the fallback only"
 )
 
 print("router")
