@@ -141,11 +141,16 @@
             let
               # The stub the module generates, built with test values so the
               # suite can execute the real thing rather than a copy of it.
-              stubCfgDir = "/tmp/hammerspoon-check";
+              #
+              # cfgDir is a placeholder substituted with a path inside the build
+              # directory. The stub prepends <cfgDir>/lua to package.path ahead
+              # of everything else, so a fixed /tmp name would let any local
+              # process shadow the modules under test — and this flake is built
+              # without the sandbox.
               stubFallback = "com.apple.Safari";
               stub = pkgs.writeText "hammerspoon-init-under-test.lua"
                 (import ./modules/darwin/hammerspoon/stub.nix {
-                  cfgDir = stubCfgDir;
+                  cfgDir = "@stubCfgDir@";
                   fallbackBundle = stubFallback;
                 });
             in
@@ -154,8 +159,11 @@
             cp -r ${./modules/darwin/hammerspoon/lua} lua
             cp -r ${./modules/darwin/hammerspoon/tests} tests
             cp ${./stylua.toml} stylua.toml
-            cp ${stub} stub.lua
             chmod -R u+w lua tests
+
+            stubCfgDir="$PWD/cfg"
+            mkdir -p "$stubCfgDir/lua"
+            substitute ${stub} stub.lua --replace-fail '@stubCfgDir@' "$stubCfgDir"
 
             # find, not a glob: subdirectories must be checked too.
             find lua tests -name '*.lua' -print0 | xargs -0 -n1 luac -p
@@ -172,9 +180,8 @@
             # require("lua.init"); fixtures/ resolves its require("hs.ipc").
             HOME="$PWD/fakehome" lua \
               -e "HARNESS='$PWD/tests/harness.lua'" \
-              -e "INITLUA='$PWD/lua/init.lua'" \
               -e "STUBLUA='$PWD/stub.lua'" \
-              -e "STUBCFGDIR='${stubCfgDir}'" \
+              -e "STUBCFGDIR='$stubCfgDir'" \
               -e "STUBFALLBACK='${stubFallback}'" \
               -e "package.path='$PWD/?.lua;$PWD/lua/?.lua;$PWD/tests/fixtures/?.lua;'..package.path" \
               tests/spec.lua

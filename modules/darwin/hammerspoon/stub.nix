@@ -37,7 +37,7 @@ in
 
     -- Hammerspoon has regressed on symlink resolution before, and the failure
     -- mode is a stale config that looks correct.
-    local expected = "${cfgDir}"
+    local expected = ${luaStr cfgDir}
     if hs.configdir ~= expected then
       -- print() as well: notifications need an authorization this bundle may
       -- not have yet.
