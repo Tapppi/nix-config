@@ -422,55 +422,6 @@ check(
   "the dispatched url never reached a launch"
 )
 
-print("init.lua")
--- Loading the real entry point: a typo in the hotkey loop or a renamed helper
--- would pass luac -p and then throw on the machine, leaving no hotkeys at all.
-NAMES["com.mitchellh.ghostty"] = "Ghostty"
--- require, not dofile: dofile leaves package.loaded empty, so the generated
--- stub's own require("lua.init") would run the whole file a second time and
--- every assertion below would describe a doubly-registered world.
-local loaded, err = pcall(require, "lua.init")
-check("init.lua loads", loaded, tostring(err))
-
-if loaded then
-  local expected = { "s", "k", "i", "f", "x", "j", "m", "d", "z", "b", "v", "c" }
-  local missing = {}
-  for _, key in ipairs(expected) do
-    if not RECORDED.binds["hyper:" .. key] then
-      missing[#missing + 1] = key
-    end
-  end
-  check("every hyper hotkey binds", #missing == 0, "missing: " .. table.concat(missing, ","))
-  check("calendar is on x, since c belongs to a browser profile", RECORDED.binds["hyper:x"] ~= nil)
-  check(
-    "no browser target collides with an app hotkey",
-    (function()
-      -- The nix assertion only compares targets against each other; it cannot see
-      -- this file. hs.hotkey lets the later bind win silently, and the browser
-      -- keys bind last — so a collision would kill an app hotkey with no error
-      -- and every key in the list above would still test as bound.
-      local appKeys = { s = true, k = true, i = true, f = true, x = true, j = true, m = true, d = true, z = true }
-      for _, target in ipairs(browsers.targets) do
-        if appKeys[target.key] then
-          return false
-        end
-      end
-      return true
-    end)()
-  )
-  check(
-    "the browser keys come from the target list",
-    (function()
-      for _, target in ipairs(browsers.targets) do
-        if not RECORDED.binds["hyper:" .. target.key] then
-          return false
-        end
-      end
-      return true
-    end)()
-  )
-end
-
 print("generated stub")
 
 -- STUBLUA is the real generated init.lua, built by nix with test values. It is
@@ -478,6 +429,9 @@ print("generated stub")
 -- nothing else in the build executes it: home.file receives the built store
 -- path unread. Loaded last, because it registers a path watcher and reassigns
 -- hs.urlevent.httpCallback.
+-- bindToggle's watchCreate path looks this up while init.lua loads.
+NAMES["com.mitchellh.ghostty"] = "Ghostty"
+
 if not STUBLUA then
   check("STUBLUA was passed to the spec", false, "the flake check must build the stub and pass its path")
 else
@@ -502,11 +456,19 @@ else
 
     -- The load-time pcall reports failure through a notification and nothing
     -- else, so a config that throws leaves the stub looking healthy: callback
-    -- registered, watcher running, no hotkeys.
+    -- registered, watcher running, no hotkeys. The hotkey assertions further
+    -- down are what make this falsifiable.
     check(
       "it brings up the hand-written config",
       not notifiedSince("Hammerspoon config failed to load", notifiedBefore) and package.loaded["lua.init"] ~= nil
     )
+    -- A bare require("init") resolves back through Hammerspoon's own
+    -- <configdir>/?.lua template to the stub itself and recurses until the
+    -- stack blows, which the pcall then reports as success. The module key is
+    -- the only visible difference between that and a correct load.
+    check("it requires the config by its dotted name", package.loaded["init"] == nil)
+    check("it opens the ipc port activation reloads through", RECORDED.ipcRequired == true)
+    check("it puts its own lua/ on package.path", package.path:find(hs.configdir .. "/lua/?.lua", 1, true) ~= nil)
     check(
       "it reports no configdir drift when the path matches",
       not notifiedSince("Hammerspoon config dir drift", notifiedBefore)
@@ -578,6 +540,52 @@ else
     check("a drifted configdir still loads", reloadedOk)
     check("a drifted configdir is reported", notifiedSince("Hammerspoon config dir drift", driftFrom))
   end
+end
+
+print("init.lua, as the stub loaded it")
+-- Asserted against the state the stub's own require produced. Loading it here
+-- as well would make the stub's load a cache hit, and every assertion about
+-- whether the stub brings the config up unfalsifiable.
+local loaded = package.loaded["lua.init"] ~= nil
+check("init.lua loads", loaded)
+
+if loaded then
+  local expected = { "s", "k", "i", "f", "x", "j", "m", "d", "z", "b", "v", "c" }
+  local missing = {}
+  for _, key in ipairs(expected) do
+    if not RECORDED.binds["hyper:" .. key] then
+      missing[#missing + 1] = key
+    end
+  end
+  check("every hyper hotkey binds", #missing == 0, "missing: " .. table.concat(missing, ","))
+  check("calendar is on x, since c belongs to a browser profile", RECORDED.binds["hyper:x"] ~= nil)
+  check(
+    "no browser target collides with an app hotkey",
+    (function()
+      -- The nix assertion only compares targets against each other; it cannot see
+      -- this file. hs.hotkey lets the later bind win silently, and the browser
+      -- keys bind last — so a collision would kill an app hotkey with no error
+      -- and every key in the list above would still test as bound.
+      local appKeys = { s = true, k = true, i = true, f = true, x = true, j = true, m = true, d = true, z = true }
+      for _, target in ipairs(browsers.targets) do
+        if appKeys[target.key] then
+          return false
+        end
+      end
+      return true
+    end)()
+  )
+  check(
+    "the browser keys come from the target list",
+    (function()
+      for _, target in ipairs(browsers.targets) do
+        if not RECORDED.binds["hyper:" .. target.key] then
+          return false
+        end
+      end
+      return true
+    end)()
+  )
 end
 
 if failures == 0 then
