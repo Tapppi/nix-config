@@ -244,10 +244,21 @@ _G.hs = {
     end,
   },
   alert = {
-    -- Style and duration are recorded, not just the text. The regression
-    -- picker.lua guards against is an alert that under-lives its modal, which
-    -- is invisible to a stub that keeps only the first argument.
-    show = function(text, style, duration)
+    -- The real signature is (str, style, screen, duration) and hs.alert
+    -- shuffles: it scans the optional arguments and takes the first number as
+    -- the duration. Modelling the shuffle rather than a fixed position means
+    -- the duration assertion tests behaviour, not argument order — otherwise a
+    -- correct refactor to the four-argument form would record a screen table
+    -- as the duration and fail with a nonsense message.
+    show = function(text, ...)
+      local duration, style
+      for _, arg in ipairs({ ... }) do
+        if type(arg) == "number" and not duration then
+          duration = arg
+        elseif type(arg) == "table" and not style then
+          style = arg
+        end
+      end
       recorded.alerts[#recorded.alerts + 1] = text
       recorded.alertShown = { text = text, style = style, duration = duration }
       return "alert-" .. #recorded.alerts
