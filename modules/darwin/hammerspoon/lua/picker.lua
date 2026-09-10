@@ -20,7 +20,7 @@ M.timeout = 15
 -- arrives.
 M.maxHold = 60
 
-local state = { modal = nil, alert = nil, queue = {}, timer = nil, ceiling = nil }
+local state = { modal = nil, alert = nil, queue = {}, timer = nil, ceiling = nil, entered = false }
 
 local function dismiss()
   if state.timer then
@@ -38,6 +38,7 @@ local function dismiss()
   if state.modal then
     state.modal:exit()
   end
+  state.entered = false
 end
 
 local function drain()
@@ -72,13 +73,10 @@ end
 --- Fallible: the profile names are read off disk. present() drains the queue if
 --- any of this raises.
 local function offer()
-  -- Reopened so the queue count is visible.
-  local reopening = state.alert ~= nil
-  if reopening then
-    hs.alert.closeSpecific(state.alert)
-    state.alert = nil
-  end
-
+  -- Rows first, and the old alert stays up until the new one exists.
+  -- browsers.label reads profile names off disk, so this can raise — and with
+  -- the picker kept alive on a reopen, closing first would leave the modal
+  -- holding the keyboard machine-wide with nothing on screen to say why.
   local rows = {}
   for _, target in ipairs(browsers.targets) do
     rows[#rows + 1] = target.key .. "   " .. browsers.label(target)
@@ -95,10 +93,15 @@ local function offer()
   -- No screen argument: hs.alert scans optional arguments with ipairs, so a nil
   -- would truncate the scan and drop the duration to 2s while the modal held
   -- the keyboard for the full timeout.
+  local previous = state.alert
   state.alert = hs.alert.show(table.concat(rows, "\n"), {
     textSize = 18,
     radius = 8,
   }, M.timeout + 1)
+  -- Reopened rather than left stacked, so the queue count is the visible one.
+  if previous then
+    hs.alert.closeSpecific(previous)
+  end
 
   -- Armed before the modal is entered, so the modal cannot outlive it. The
   -- countdown belongs to the newest link, so it restarts; the ceiling belongs
@@ -111,11 +114,13 @@ local function offer()
     state.ceiling = hs.timer.doAfter(M.maxHold, expire)
   end
 
-  if reopening then
-    return
+  -- state.entered, not the alert or the timer: after a raise those two
+  -- disagree about whether a picker is up, and entering an already-entered
+  -- modal never exits.
+  if not state.entered then
+    state.modal:enter()
+    state.entered = true
   end
-
-  state.modal:enter()
 end
 
 --- Bind the modal once, at load. Rebinding per link would leak a hotkey set
@@ -154,8 +159,14 @@ function M.present(url)
   -- load, and an unbound modal would throw on every click.
   M.setup()
 
+  -- A nil would append nothing and then hold the keyboard over an empty queue
+  -- until the countdown opened nothing at all. Raising hands it to the fallback.
+  if type(url) ~= "string" then
+    error("present() needs a url string, got " .. type(url), 0)
+  end
+
   -- Whether a picker is already up decides what a failure below may discard.
-  local reopening = state.timer ~= nil
+  local reopening = state.entered
 
   state.queue[#state.queue + 1] = url
 
@@ -169,12 +180,10 @@ function M.present(url)
       -- answerable under the timers it armed, so only the link that raised is
       -- given up — dropping the rest would lose them with nothing on screen to
       -- say so, which is the one failure this module exists to avoid.
-      for i = #state.queue, 1, -1 do
-        if state.queue[i] == url then
-          table.remove(state.queue, i)
-          break
-        end
-      end
+      -- The tail by construction: present() appended it above and nothing
+      -- offer() reaches mutates the queue. Matching by value would pick an
+      -- arbitrary entry if the same link were ever queued twice.
+      table.remove(state.queue)
     else
       -- Nothing was on screen, so there is no picker to answer: release the
       -- keyboard and let the fallback have the link.
