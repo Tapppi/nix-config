@@ -329,10 +329,15 @@ in
         echo "configuring Hammerspoon" >&2
 
         # darwin-rebuild routes --dry-run into build flags only and runs the
-        # activation script regardless, so the intent has to be recovered from
-        # the parent's argv. home-manager also tests $DRY_RUN, which is useless
-        # here: this script's shebang is `env -i`, so nothing is inherited to
-        # test.
+        # activation script regardless, so the intent is recoverable only from
+        # the parent's argv — activate's shebang is `env -i`, so no variable
+        # survives into it however the rebuild was invoked.
+        #
+        # home-manager derives the same reading a few lines earlier. Publishing
+        # one DRY_RUN for both was considered and rejected: it would make this
+        # guard depend on another module having run, and a guard that silently
+        # stops firing restarts Hammerspoon and raises dialogs in the middle of
+        # a preview. Duplicating one `ps` call is the cheaper failure.
         hsParentArgs="$(/bin/ps -p "$PPID" -ww -o args= 2>/dev/null || true)"
 
         # A claim made against an instance running some other config would send
