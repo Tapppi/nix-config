@@ -391,8 +391,8 @@ check("the countdown runs for picker.timeout", countdown.seconds == picker.timeo
 -- would pre-empt every countdown, and one ordinary link would hold the keyboard
 -- for the whole minute.
 check(
-  "the timeout is 15",
-  picker.timeout < picker.maxHold,
+  "the countdown runs out before the ceiling, and the ceiling stays inside a minute",
+  picker.timeout < picker.maxHold and picker.maxHold <= 60,
   "timeout=" .. tostring(picker.timeout) .. " maxHold=" .. tostring(picker.maxHold)
 )
 
@@ -464,6 +464,43 @@ check(
 -- A countdown left armed would fire after the ceiling had already routed and
 -- open a queue that no longer exists.
 check("the ceiling cancels the countdown it pre-empted", refreshed ~= nil and refreshed.stopped == true)
+
+-- A raise while reopening must never leave the modal holding the keyboard with
+-- nothing on screen: the alert is what tells the user why their keys stopped
+-- working, and the picker is deliberately kept alive on this path.
+picker.present("https://onscreen-one.example")
+-- The harness hands back "alert-N", so the id of the alert currently on screen
+-- is recoverable and can be checked against what closeSpecific was given.
+local liveAlert = "alert-" .. #RECORDED.alerts
+local enteredBefore = RECORDED.entered
+RECORDED.closed = nil
+local savedLabel2 = browsers.label
+browsers.label = function()
+  error("label unavailable")
+end
+pcall(picker.present, "https://onscreen-two.example")
+browsers.label = savedLabel2
+check(
+  "a raise while reopening leaves the alert up",
+  RECORDED.closed ~= liveAlert,
+  "closed " .. tostring(RECORDED.closed) .. " with the modal still entered"
+)
+
+-- present() and offer() once disagreed about whether a picker was up — one read
+-- the timer, the other the alert — so a link after this re-entered the modal.
+picker.present("https://onscreen-three.example")
+check(
+  "a link after a reopen-raise does not re-enter the modal",
+  RECORDED.entered == enteredBefore,
+  "entered " .. RECORDED.entered .. ", expected " .. enteredBefore
+)
+RECORDED.binds["escape"]()
+
+-- A nil url would append nothing and then hold the keyboard over an empty queue
+-- until the countdown opened nothing at all.
+local nilRaised = pcall(picker.present, nil)
+check("a nil url raises rather than entering a modal", not nilRaised)
+check("a nil url leaves no picker up", RECORDED.entered == enteredBefore)
 
 -- The other direction. An answered picker that leaves its ceiling armed hands
 -- the next picker's queue to targets[1] when that ceiling runs out, in place of
