@@ -21,6 +21,12 @@ let
   # because the paths that make a bundle supported have to live next to the
   # code that reads them, and a second copy in this option would be the thing
   # the assertion below is meant to prevent.
+  #
+  # This reads the module's own browsers.lua, not the one the machine loads:
+  # luaDir is an out-of-store symlink and can be pointed at a worktree, so a
+  # target added there is checked against that tree's table while Hammerspoon
+  # runs the main checkout's. The assertion catches a target the *evaluated*
+  # tree cannot support, which is the common case; it cannot see that skew.
   supportedBundles =
     let
       lines = lib.splitString "\n" (builtins.readFile ./lua/browsers.lua);
@@ -31,7 +37,14 @@ let
       # truncate the list. Each key is matched on its own line, so a
       # commented-out entry cannot join it.
       closeIdx = lib.lists.findFirstIndex (l: builtins.match "[}].*" l != null) null rest;
-      body = if closeIdx == null then rest else lib.lists.sublist 0 closeIdx rest;
+      body =
+        if closeIdx == null then
+          throw (
+            "hammerspoon: M.localState in lua/browsers.lua has no closing brace in column 0; "
+            + "the supported-bundle list cannot be delimited"
+          )
+        else
+          lib.lists.sublist 0 closeIdx rest;
       keys = builtins.filter (m: m != null) (
         map (l: builtins.match "[[:space:]]*[[]\"([^\"]+)\"[]][[:space:]]*=.*" l) body
       );
@@ -45,6 +58,18 @@ let
   # target wants every window of the app anyway, which is what it gets.
   unsupported = lib.unique (
     map (t: t.bundle) (lib.filter (t: t.profileDir != null && !(lib.elem t.bundle supportedBundles)) browsers)
+  );
+
+  # The same collision from the other direction, and on a bundle the Lua reads
+  # perfectly well: a target with no profileDir claims every window of its
+  # bundle, so pairing one with a profiled target on that bundle means the
+  # unprofiled one swallows the profiled one's windows.
+  overlapping = lib.unique (
+    map (t: t.bundle) (
+      lib.filter (
+        t: t.profileDir == null && lib.any (o: o.bundle == t.bundle && o.profileDir != null) browsers
+      ) browsers
+    )
   );
 
   # The bundle is rsynced to a stable path by nix-darwin's applications
@@ -249,6 +274,13 @@ in
       }
       # Degrades silently otherwise: with no profile list every window of the
       # bundle matches every target naming it, so two of them fight over one.
+      {
+        assertion = overlapping == [ ];
+        message =
+          "local.browsers.targets: ${lib.concatStringsSep ", " overlapping} has both a target with no "
+          + "profileDir and one with a profileDir. The first claims every window of the bundle, "
+          + "including the second's, so give every target on a bundle a profileDir.";
+      }
       {
         assertion = unsupported == [ ];
         message =

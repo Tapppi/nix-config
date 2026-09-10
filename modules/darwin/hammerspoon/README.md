@@ -324,21 +324,30 @@ So a browser window that is fullscreen or on another Space is invisible to the h
 you get a duplicate window on the current Space. It is self-correcting — the next press finds that new window — and it
 does not affect link routing, which always goes through `open`.
 
-**The stub's crash fallback is hard-coded Safari, and cannot carry a profile.** It runs precisely when the configured
-targets could not be loaded, so it may not depend on them; Safari is the one bundle guaranteed to be present.
-`openURLWithBundle` takes a bundle id and nothing else, so the link lands in whichever Safari profile was last used.
-That is the price of a fallback that depends on nothing outside the generated stub, and it is the right trade: a link
-in the wrong browser is recoverable, a link that goes nowhere is not.
+**The stub's crash fallback is hard-coded Safari, and cannot carry a profile.** Not because it could not name a
+configured target — the previous value was the first target's bundle, interpolated at eval time and just as independent
+of anything loaded at runtime. It is hard-coded because Safari is the one bundle guaranteed to be present on any Mac,
+so the fallback holds even on a machine whose configured browsers are not installed. The cost is real and accepted: a
+router failure puts the link in Safari rather than your primary browser, and `openURLWithBundle` takes a bundle id and
+nothing else, so it lands in whichever Safari profile was last used. A link in the wrong browser is recoverable; a link
+that goes nowhere is not.
 
 ## Testing
 
-`nix flake check` parses every Lua file with the Lua 5.4 `luac -p` that matches the interpreter Hammerspoon embeds,
-holds it to `stylua.toml`, and then **runs** it. That last part matters more than it looks: the hand-written Lua is
-symlinked out of the store, so no build ever loads it, and nothing else would catch a file that parses but cannot run.
+`nix flake check` is the whole verification surface for the Lua, because the hand-written config is symlinked out of
+the store and no build ever loads it. The check parses every Lua file with the same Lua 5.4 the app embeds, holds it to
+`stylua.toml`, and then *runs* it against a stub `hs` that records what the modules did.
 
-`tests/harness.lua` is a stub `hs` — not a simulator. It covers the decisions that are pure: which window belongs to
-which profile, what argv a launch produces, and how the picker sequences. Anything needing real key capture or a real
-window server has to be tested on the machine, and the modal question above is exactly that.
+Two things about that are easy to break and are recorded nowhere else:
+
+- **The generated `init.lua` is executed too, not just parsed.** It lives in `stub.nix` precisely so the check can
+  build it with test values and `dofile` it — it is the one file whose failure loses every clicked link on the machine.
+  `tests/fixtures/hs/` resolves the `require("hs.ipc")` it performs for its side effect.
+- **Its `cfgDir` must resolve inside the build directory.** The stub prepends `<cfgDir>/lua` to `package.path` ahead of
+  everything else, and this flake builds unsandboxed, so a fixed `/tmp` name would let any local process shadow the
+  modules under test. The check substitutes a placeholder with `$PWD/cfg` for that reason.
+
+Anything involving real key capture, a real window server or real LaunchServices has to be tested on the machine.
 
 ## `~/.hammerspoon` must stay gone
 
