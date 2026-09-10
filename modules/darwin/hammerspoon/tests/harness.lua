@@ -187,6 +187,10 @@ _G.hs = {
       return {
         send = function()
           recorded.notified[#recorded.notified + 1] = spec and spec.title or "?"
+          -- The stub swallows a config load failure into its own pcall and
+          -- reports it only here, so without the body a broken init.lua fails
+          -- with no reason attached.
+          recorded.notifiedText = spec and spec.informativeText or nil
         end,
       }
     end,
@@ -281,8 +285,6 @@ _G.hs = {
         self.stopped = true
         recorded.timersStopped = recorded.timersStopped + 1
       end
-      recorded.timerAfter = seconds
-      recorded.timerFn = fn
       recorded.timers[#recorded.timers + 1] = t
       return t
     end,

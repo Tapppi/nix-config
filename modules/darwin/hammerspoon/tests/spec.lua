@@ -637,7 +637,8 @@ else
     -- down are what make this falsifiable.
     check(
       "it brings up the hand-written config",
-      not notifiedSince("Hammerspoon config failed to load", notifiedBefore) and package.loaded["lua.init"] ~= nil
+      not notifiedSince("Hammerspoon config failed to load", notifiedBefore) and package.loaded["lua.init"] ~= nil,
+      tostring(RECORDED.notifiedText)
     )
     -- A bare require("init") resolves back through Hammerspoon's own
     -- <configdir>/?.lua template to the stub itself and recurses until the
@@ -681,6 +682,9 @@ else
     -- A delta, not a cumulative count: earlier sections leave alerts behind, so
     -- a cumulative assertion passes even when dispatch does nothing.
     local alertsBefore = #RECORDED.alerts
+    -- One overwritten slot, so it has to be cleared here rather than relied on
+    -- to be untouched by everything above.
+    RECORDED.fallbackOpened = nil
     hs.urlevent.httpCallback("https", "one.example", {}, "https://one.example", 1)
     check(
       "a clicked link reaches the picker rather than the fallback",
@@ -783,7 +787,7 @@ print("init.lua, as the stub loaded it")
 -- as well would make the stub's load a cache hit, and every assertion about
 -- whether the stub brings the config up unfalsifiable.
 local loaded = package.loaded["lua.init"] ~= nil
-check("init.lua loads", loaded)
+check("init.lua loads", loaded, tostring(RECORDED.notifiedText))
 
 if loaded then
   local expected = { "s", "k", "i", "f", "x", "j", "m", "d", "z", "b", "v", "c" }
